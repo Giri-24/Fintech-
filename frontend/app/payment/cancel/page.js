@@ -10,59 +10,59 @@ export default function PaymentCancelPage() {
       justifyContent: "center",
       minHeight: "100vh",
       padding: "24px",
-      background: "#f5f7fa",
-      color: "#111827",
-      fontFamily: "'Inter', sans-serif",
+      background: "#070b14",
+      color: "#f8fafc",
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
     }}>
       <div style={{
         width: "100%",
         maxWidth: "480px",
-        background: "#ffffff",
-        border: "1px solid #e5e7eb",
+        background: "#0c1322",
+        border: "1px solid rgba(245, 158, 11, 0.35)",
         borderRadius: "12px",
         padding: "32px",
-        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)",
+        boxShadow: "0 0 24px rgba(245, 158, 11, 0.15)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
           <div style={{
-            width: "38px",
-            height: "38px",
-            borderRadius: "8px",
-            background: "#fffbeb",
-            color: "#d97706",
+            width: "40px",
+            height: "40px",
+            borderRadius: "10px",
+            background: "rgba(245, 158, 11, 0.15)",
+            color: "#f59e0b",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "18px",
-            fontWeight: "700",
-            border: "1px solid #fde68a",
+            fontSize: "20px",
+            fontWeight: "800",
+            border: "1px solid rgba(245, 158, 11, 0.4)",
           }}>
             !
           </div>
           <div>
-            <h1 style={{ fontSize: "17px", fontWeight: "700", margin: 0, color: "#111827" }}>
+            <h1 style={{ fontSize: "18px", fontWeight: "800", margin: 0, color: "#f8fafc" }}>
               Payment Authorization Cancelled
             </h1>
-            <p style={{ color: "#6b7280", margin: "2px 0 0", fontSize: "12px" }}>
-              PayPal Orders v2 · No charges incurred
+            <p style={{ color: "#94a3b8", margin: "2px 0 0", fontSize: "12px" }}>
+              PayPal Orders v2 · No escrow charges incurred
             </p>
           </div>
         </div>
 
-        <p style={{ color: "#4b5563", fontSize: "13.5px", lineHeight: "1.6", marginBottom: "24px" }}>
-          Your payment authorization was cancelled prior to capture. No escrow hold was placed on your account. You can re-authorize this purchase order at any time in the Approvals & Settlement tab.
+        <p style={{ color: "#94a3b8", fontSize: "13.5px", lineHeight: "1.6", marginBottom: "24px" }}>
+          Your payment authorization was cancelled prior to capture. Zero escrow hold was placed on your enterprise account. You can re-authorize this purchase order at any time in the Settlement tab.
         </p>
 
         <Link href="/" style={{
           display: "inline-block",
           textDecoration: "none",
           padding: "10px 18px",
-          background: "#0070ba",
-          color: "#ffffff",
+          background: "#142036",
+          color: "#f8fafc",
           borderRadius: "6px",
           fontSize: "13px",
-          fontWeight: "600",
-          boxShadow: "0 1px 2px rgba(0, 112, 186, 0.2)",
+          fontWeight: "700",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
         }}>
           ← Return to Command Centre
         </Link>

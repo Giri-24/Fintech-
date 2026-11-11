@@ -1,92 +1,88 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// --- Clean Line Icons (16x16, 1.8 stroke) ---
+// --- Custom SVGs & Line Icons ---
 const Icons = {
   Command: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1.5" />
       <rect x="14" y="3" width="7" height="7" rx="1.5" />
       <rect x="14" y="14" width="7" height="7" rx="1.5" />
       <rect x="3" y="14" width="7" height="7" rx="1.5" />
     </svg>
   ),
-  Analytics: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 3v18h18" />
-      <path d="m19 9-5 5-4-4-3 3" />
+  Probability: () => (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke="#00c3ff" strokeWidth="2.5" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
+  Services: () => (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M7 15h0M2 9.5h20" />
     </svg>
   ),
   Pools: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m7.5 4.27 9 5.15" />
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-      <path d="m3.3 7 8.7 5 8.7-5" />
-      <path d="M12 22V12" />
+      <path d="m3.3 7 8.7 5 8.7-5M12 22V12" />
     </svg>
   ),
   Predictive: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2v4" />
-      <path d="M12 18v4" />
-      <path d="M4.93 4.93l2.83 2.83" />
-      <path d="M16.24 16.24l2.83 2.83" />
-      <path d="M2 12h4" />
-      <path d="M18 12h4" />
-      <path d="M4.93 19.07l2.83-2.83" />
-      <path d="M16.24 7.76l2.83-2.83" />
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v18h18M7 15l4-4 4 4 6-7" />
     </svg>
   ),
   Mesh: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="12 2 2 7 12 12 22 7 12 2" />
-      <polyline points="2 17 12 22 22 17" />
-      <polyline points="2 12 12 17 22 12" />
+      <polyline points="2 17 12 22 22 17M2 12 12 17 22 12" />
     </svg>
   ),
   Negotiation: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m16 3 4 4-4 4" />
-      <path d="M20 7H4" />
-      <path d="m8 21-4-4 4-4" />
-      <path d="M4 17h16" />
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16" />
     </svg>
   ),
   Approvals: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="5" width="20" height="14" rx="2" />
       <line x1="2" y1="10" x2="22" y2="10" />
     </svg>
   ),
   PayPal: () => (
     <svg width="18" height="20" viewBox="0 0 24 28" fill="none">
-      <path d="M4.5 24.5L7.2 4.2h7.8c3.2 0 5.4.7 6.3 2.1.9 1.4.9 3.2.1 5.3-.9 2.5-2.7 4.2-5.3 5.2-1.2.5-2.7.7-4.6.7H8.8L6.9 24.5H4.5z" fill="#003087" />
-      <path d="M8.8 17.5h2.7c3.2 0 5.4-.7 6.3-2.1.9-1.4.9-3.2.1-5.3-.9-2.5-2.7-4.2-5.3-5.2-1.2-.5-2.7-.7-4.6-.7H3.5L.8 24.5h3.8l2.2-7z" fill="#0079C1" opacity="0.95" />
-    </svg>
-  ),
-  Check: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
+      <path d="M4.5 24.5L7.2 4.2h7.8c3.2 0 5.4.7 6.3 2.1.9 1.4.9 3.2.1 5.3-.9 2.5-2.7 4.2-5.3 5.2-1.2.5-2.7.7-4.6.7H8.8L6.9 24.5H4.5z" fill="#0079C1" />
+      <path d="M8.8 17.5h2.7c3.2 0 5.4-.7 6.3-2.1.9-1.4.9-3.2.1-5.3-.9-2.5-2.7-4.2-5.3-5.2-1.2-.5-2.7-.7-4.6-.7H3.5L.8 24.5h3.8l2.2-7z" fill="#00457C" opacity="0.9" />
     </svg>
   ),
   Shield: () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00c3ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   ),
   Zap: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  ),
+  TrendingUp: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00c3ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
     </svg>
   ),
 };
 
 const navItems = [
   { key: "command", label: "Command Centre", icon: Icons.Command },
-  { key: "analytics", label: "Demand & Savings Graph", icon: Icons.Analytics },
+  { key: "probability", label: "ROI & Probability Engine", icon: Icons.Probability, highlight: true },
+  { key: "services", label: "PayPal Services & Rails", icon: Icons.Services, badge: "5 Rails" },
   { key: "pools", label: "Active Demand Pools", icon: Icons.Pools },
   { key: "predictive", label: "Predictive Buying", icon: Icons.Predictive },
   { key: "mesh", label: "Demand Mesh", icon: Icons.Mesh },
@@ -99,7 +95,7 @@ export default function Home() {
   const [token, setToken] = useState(null);
   const [orgName, setOrgName] = useState("");
   const [backendOnline, setBackendOnline] = useState(false);
-  const [selectedPoolForCheckout, setSelectedPoolForCheckout] = useState(null);
+  const [preselectedCheckout, setPreselectedCheckout] = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/health`)
@@ -114,78 +110,82 @@ export default function Home() {
     setOrgName("");
   }
 
-  function handleDirectPoolCheckout(pool) {
-    setSelectedPoolForCheckout(pool);
+  function handleStartCheckout(payload) {
+    setPreselectedCheckout(payload);
     setActive("approvals");
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", color: "#111827" }}>
-      {/* Sidebar */}
+    <div style={{ display: "flex", minHeight: "100vh", background: "#070b14", color: "#f8fafc" }}>
+      {/* Sidebar - Deep Obsidian Slate with Cyan Accents */}
       <aside style={{
-        width: "256px",
-        background: "#ffffff",
-        borderRight: "1px solid #e5e7eb",
+        width: "264px",
+        background: "#050810",
+        borderRight: "1px solid rgba(255, 255, 255, 0.08)",
         padding: "24px 16px",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
       }}>
         {/* Brand */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", padding: "0 6px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "22px", padding: "0 6px" }}>
           <div style={{
-            width: "34px",
-            height: "34px",
-            borderRadius: "8px",
-            background: "#003087",
+            width: "36px",
+            height: "36px",
+            borderRadius: "10px",
+            background: "linear-gradient(135deg, #0070ba 0%, #003087 100%)",
+            border: "1px solid rgba(0, 195, 255, 0.4)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "15px",
-            fontWeight: "700",
+            fontSize: "16px",
+            fontWeight: "800",
             color: "#ffffff",
+            boxShadow: "0 0 16px rgba(0, 112, 186, 0.4)",
           }}>
             M
           </div>
           <div>
-            <div style={{ fontSize: "16px", fontWeight: "700", letterSpacing: "-0.01em", color: "#003087" }}>
-              MINT
+            <div style={{ fontSize: "16px", fontWeight: "800", letterSpacing: "-0.02em", color: "#f8fafc" }}>
+              MINT <span style={{ color: "#00c3ff", fontSize: "13px", fontWeight: "600" }}>Fintech</span>
             </div>
-            <div style={{ fontSize: "11px", color: "#6b7280" }}>
-              PayPal Procurement Gateway
+            <div style={{ fontSize: "11px", color: "#64748b" }}>
+              PayPal Procurement Platform
             </div>
           </div>
         </div>
 
-        {/* Connectivity Status */}
+        {/* Live Connectivity Status Pill with controlled luminescence */}
         <div style={{
           display: "flex",
           alignItems: "center",
           gap: "8px",
           padding: "8px 12px",
           borderRadius: "6px",
-          background: backendOnline ? "#ecfdf5" : "#fffbeb",
-          border: `1px solid ${backendOnline ? "#a7f3d0" : "#fde68a"}`,
-          marginBottom: "18px",
+          background: backendOnline ? "rgba(16, 185, 129, 0.08)" : "rgba(245, 158, 11, 0.08)",
+          border: `1px solid ${backendOnline ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)"}`,
+          marginBottom: "20px",
           fontSize: "12px",
+          boxShadow: backendOnline ? "0 0 12px rgba(16, 185, 129, 0.12)" : "none",
         }}>
           <span style={{
-            width: "6px",
-            height: "6px",
+            width: "7px",
+            height: "7px",
             borderRadius: "50%",
-            backgroundColor: backendOnline ? "#059669" : "#d97706",
+            backgroundColor: backendOnline ? "#10b981" : "#f59e0b",
+            boxShadow: backendOnline ? "0 0 8px #10b981" : "none",
           }} />
-          <span style={{ color: backendOnline ? "#065f46" : "#92400e", fontWeight: "600" }}>
-            {backendOnline ? "PayPal API Connected" : "Sandbox Mock Mode"}
+          <span style={{ color: backendOnline ? "#10b981" : "#f59e0b", fontWeight: "600" }}>
+            {backendOnline ? "PayPal Orders v2 Connected" : "Sandbox Mock Mode Active"}
           </span>
         </div>
 
         {/* Navigation */}
-        <nav style={{ display: "flex", flexDirection: "column", gap: "3px", flex: 1 }}>
-          <div style={{ fontSize: "11px", color: "#9ca3af", padding: "4px 8px", textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: "700" }}>
-            Core Modules
+        <nav style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
+          <div style={{ fontSize: "11px", color: "#475569", padding: "4px 8px", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "700" }}>
+            Customer Architecture
           </div>
-          {navItems.map(({ key, label, icon: IconComponent }) => {
+          {navItems.map(({ key, label, icon: IconComponent, highlight, badge }) => {
             const isActive = active === key;
             return (
               <button
@@ -194,75 +194,97 @@ export default function Home() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "10px",
+                  justifyContent: "space-between",
                   width: "100%",
                   textAlign: "left",
                   padding: "9px 12px",
-                  borderRadius: "6px",
-                  background: isActive ? "#f0f7fd" : "transparent",
-                  color: isActive ? "#0070ba" : "#4b5563",
-                  borderLeft: isActive ? "3px solid #0070ba" : "3px solid transparent",
+                  borderRadius: "8px",
+                  background: isActive ? "linear-gradient(90deg, rgba(0, 112, 186, 0.22) 0%, rgba(0, 195, 255, 0.06) 100%)" : "transparent",
+                  color: isActive ? "#ffffff" : "#94a3b8",
+                  border: isActive ? "1px solid rgba(0, 195, 255, 0.3)" : "1px solid transparent",
                   cursor: "pointer",
                   fontSize: "13px",
                   fontWeight: isActive ? "600" : "500",
-                  transition: "background 0.12s ease, color 0.12s ease",
+                  transition: "all 0.12s ease",
+                  boxShadow: isActive ? "0 0 14px rgba(0, 112, 186, 0.2)" : "none",
                 }}
               >
-                <span style={{ color: isActive ? "#0070ba" : "#9ca3af", display: "flex", alignItems: "center" }}>
-                  <IconComponent />
-                </span>
-                {label}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ color: isActive ? "#00c3ff" : "#64748b", display: "flex", alignItems: "center" }}>
+                    <IconComponent />
+                  </span>
+                  {label}
+                </div>
+                {badge && (
+                  <span style={{ fontSize: "10px", fontWeight: "700", background: "rgba(0, 195, 255, 0.15)", color: "#00c3ff", padding: "1px 6px", borderRadius: "4px" }}>
+                    {badge}
+                  </span>
+                )}
+                {highlight && !isActive && (
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00c3ff", boxShadow: "0 0 6px #00c3ff" }} />
+                )}
               </button>
             );
           })}
         </nav>
 
-        {/* Session Card */}
+        {/* Customer Session Card */}
         <div style={{
-          padding: "12px 14px",
+          padding: "14px",
           borderRadius: "8px",
-          background: "#f8fafc",
-          border: "1px solid #e2e8f0",
+          background: "#0c1322",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
           fontSize: "12px",
         }}>
           {token ? (
             <div>
-              <div style={{ color: "#6b7280", fontSize: "11px" }}>Active Buyer Account:</div>
-              <div style={{ color: "#111827", fontWeight: "600", marginTop: "2px" }}>{orgName}</div>
+              <div style={{ color: "#64748b", fontSize: "11px" }}>Authorized Customer Org:</div>
+              <div style={{ color: "#f8fafc", fontWeight: "700", marginTop: "2px", fontSize: "13px" }}>{orgName}</div>
               <button
                 onClick={handleLogout}
                 style={{
                   marginTop: "8px",
                   fontSize: "11.5px",
-                  color: "#dc2626",
+                  color: "#ef4444",
                   background: "transparent",
                   cursor: "pointer",
                   fontWeight: "600",
                   padding: 0,
                 }}
               >
-                Sign out
+                Switch Buyer Account
               </button>
             </div>
           ) : (
-            <div style={{ color: "#6b7280" }}>
-              <div style={{ fontWeight: "600", color: "#111827", marginBottom: "2px" }}>Guest Mode</div>
-              Sign in under Settlement to authorize orders.
+            <div>
+              <div style={{ color: "#94a3b8", fontWeight: "600" }}>Enterprise Guest</div>
+              <div style={{ color: "#64748b", fontSize: "11px", marginTop: "2px" }}>
+                Select an investment pool or log in under Settlement.
+              </div>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Main Workspace */}
-      <main style={{ flex: 1, padding: "36px 44px", overflowY: "auto", maxWidth: "1180px" }}>
+      {/* Main View Area */}
+      <main style={{ flex: 1, padding: "34px 44px", overflowY: "auto", maxWidth: "1200px" }}>
         {active === "command" && (
           <CommandCentre
             onNavigate={setActive}
-            onCheckoutPool={handleDirectPoolCheckout}
+            onStartCheckout={handleStartCheckout}
           />
         )}
-        {active === "analytics" && <SavingsAndDemandAnalytics onNavigate={setActive} />}
-        {active === "pools" && <ActivePoolsCatalog onCheckoutPool={handleDirectPoolCheckout} />}
+        {active === "probability" && (
+          <CustomerProbabilityEngine
+            onStartCheckout={handleStartCheckout}
+          />
+        )}
+        {active === "services" && (
+          <PayPalEnterpriseServicesHub onNavigate={setActive} />
+        )}
+        {active === "pools" && (
+          <ActiveDemandPools onStartCheckout={handleStartCheckout} />
+        )}
         {active === "predictive" && <PredictiveBuying />}
         {active === "mesh" && <DemandMesh />}
         {active === "negotiation" && <NegotiationRoom />}
@@ -273,30 +295,30 @@ export default function Home() {
             orgName={orgName}
             setOrgName={setOrgName}
             onLogout={handleLogout}
-            preselectedPool={selectedPoolForCheckout}
+            preselectedCheckout={preselectedCheckout}
           />
         )}
 
-        {/* PayPal Security Footer */}
+        {/* Global Protection Banner */}
         <footer style={{
           marginTop: "48px",
-          padding: "16px 20px",
-          borderRadius: "8px",
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+          padding: "16px 22px",
+          borderRadius: "10px",
+          background: "linear-gradient(90deg, #0c1322 0%, #101a2e 100%)",
+          border: "1px solid rgba(0, 195, 255, 0.2)",
           fontSize: "12px",
-          color: "#6b7280",
+          color: "#94a3b8",
           lineHeight: "1.6",
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          gap: "14px",
+          boxShadow: "0 0 20px rgba(0, 112, 186, 0.12)",
         }}>
-          <span style={{ color: "#0070ba", display: "flex", alignItems: "center" }}>
+          <span style={{ color: "#00c3ff", display: "flex", alignItems: "center" }}>
             <Icons.Shield />
           </span>
           <div>
-            <strong style={{ color: "#111827" }}>PayPal Orders v2 Enterprise Escrow:</strong> MINT does not commingle funds or operate pooled wallets. Each industrial participant authorizes an individual bilateral hold through PayPal REST v2. Funds are captured only upon verified pool threshold finalization with cryptographic webhook validation.
+            <strong style={{ color: "#f8fafc" }}>Enterprise Customer Protection:</strong> Funds are held in individual bilateral escrow via PayPal REST v2. If a collective volume threshold is not met within the 30-day window, holds are released back to your enterprise account with zero cancellation fees.
           </div>
         </footer>
       </main>
@@ -304,16 +326,32 @@ export default function Home() {
   );
 }
 
-// --- Common UI Components ---
+// --- Common UI Components with Subtle Magnitude Glow ---
 
-function PageHeader({ title, description, action }) {
+function PageHeader({ title, description, badge, action }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "26px" }}>
       <div>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", letterSpacing: "-0.02em", color: "#111827", margin: "0 0 4px" }}>
-          {title}
-        </h1>
-        <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: "800", letterSpacing: "-0.02em", color: "#f8fafc", margin: 0 }}>
+            {title}
+          </h1>
+          {badge && (
+            <span style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              background: "rgba(0, 195, 255, 0.15)",
+              color: "#00c3ff",
+              border: "1px solid rgba(0, 195, 255, 0.35)",
+              padding: "2px 8px",
+              borderRadius: "4px",
+              boxShadow: "0 0 8px rgba(0, 195, 255, 0.2)",
+            }}>
+              {badge}
+            </span>
+          )}
+        </div>
+        <p style={{ color: "#94a3b8", fontSize: "14px", margin: 0 }}>
           {description}
         </p>
       </div>
@@ -322,14 +360,14 @@ function PageHeader({ title, description, action }) {
   );
 }
 
-function Card({ children, style = {} }) {
+function Card({ children, style = {}, glow = false }) {
   return (
     <div style={{
-      background: "#ffffff",
-      border: "1px solid #e5e7eb",
+      background: "#0c1322",
+      border: glow ? "1px solid rgba(0, 195, 255, 0.35)" : "1px solid rgba(255, 255, 255, 0.08)",
       borderRadius: "10px",
-      padding: "20px 24px",
-      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)",
+      padding: "22px 24px",
+      boxShadow: glow ? "0 0 20px rgba(0, 112, 186, 0.18)" : "0 4px 16px rgba(0, 0, 0, 0.2)",
       ...style,
     }}>
       {children}
@@ -337,265 +375,104 @@ function Card({ children, style = {} }) {
   );
 }
 
-function Stat({ label, value, sub, delta, icon: IconComponent }) {
+function Stat({ label, value, sub, delta, glowColor }) {
   return (
     <div style={{
-      background: "#ffffff",
-      border: "1px solid #e5e7eb",
+      background: "#0c1322",
+      border: "1px solid rgba(255, 255, 255, 0.08)",
       borderRadius: "10px",
       padding: "18px 20px",
-      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
+      position: "relative",
+      overflow: "hidden",
     }}>
-      <div>
-        <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "6px", fontWeight: "500" }}>{label}</div>
-        <div style={{ fontSize: "26px", fontWeight: "700", color: "#111827", letterSpacing: "-0.02em" }} className="tabular-nums">
-          {value}
-        </div>
-        <div style={{ fontSize: "12px", color: delta ? "#059669" : "#6b7280", marginTop: "4px", fontWeight: delta ? "600" : "400" }}>
-          {sub}
-        </div>
-      </div>
-      {IconComponent && (
-        <span style={{ color: "#0070ba", background: "#f0f7fd", padding: "8px", borderRadius: "8px" }}>
-          <IconComponent />
-        </span>
+      {glowColor && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "2px",
+          background: glowColor,
+          boxShadow: `0 0 10px ${glowColor}`,
+        }} />
       )}
+      <div style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "6px", fontWeight: "600" }}>{label}</div>
+      <div style={{ fontSize: "26px", fontWeight: "800", color: "#f8fafc", letterSpacing: "-0.02em" }} className="tabular-nums">
+        {value}
+      </div>
+      <div style={{ fontSize: "12px", color: delta ? "#10b981" : "#64748b", marginTop: "4px", fontWeight: delta ? "600" : "400" }}>
+        {sub}
+      </div>
     </div>
   );
 }
 
-// --- View 1: Command Centre with Interactive Calculator & Live Graph ---
+// --- View 1: Command Centre Overview ---
 
-function CommandCentre({ onNavigate, onCheckoutPool }) {
-  const [data, setData] = useState({
-    predicted_purchases: 3,
-    active_pools: 4,
-    estimated_savings: 9575,
-    pending_approvals: 2,
-    combined_qty: 50,
-    price: "$365 / unit",
-    status: "Awaiting Buyer Authorizations",
-  });
-
-  // Interactive Calculator State
-  const [calcEquipment, setCalcEquipment] = useState("pump");
-  const [calcUnits, setCalcUnits] = useState(15);
-
-  const equipmentCatalog = {
-    pump: { name: "Industrial Centrifugal Pump 5HP", retail: 415, collective: 365, poolId: 1 },
-    motor: { name: "3-Phase Induction Motor 15kW", retail: 570, collective: 480, poolId: 2 },
-    flow: { name: "Smart Electromagnetic Flowmeter", retail: 475, collective: 390, poolId: 3 },
-    valve: { name: "High-Pressure Gate Valve PN25", retail: 260, collective: 210, poolId: 4 },
-  };
-
-  const selectedItem = equipmentCatalog[calcEquipment];
-  const retailSubtotal = selectedItem.retail * calcUnits;
-  const collectiveSubtotal = selectedItem.collective * calcUnits;
-  const calculatedSavings = retailSubtotal - collectiveSubtotal;
-  const savingsPct = ((calculatedSavings / retailSubtotal) * 100).toFixed(1);
-
+function CommandCentre({ onNavigate, onStartCheckout }) {
   return (
     <>
       <PageHeader
-        title="Command Centre"
-        description="Collective demand aggregation across industrial enterprises with automated PayPal escrow settlement."
+        title="Customer Procurement Command Centre"
+        description="Consolidate corporate equipment orders into wholesale price tiers with instant bilateral PayPal escrow."
+        badge="Enterprise V2"
         action={
           <button
-            onClick={() => onNavigate("analytics")}
+            onClick={() => onNavigate("probability")}
             style={{
-              padding: "8px 16px",
-              background: "#ffffff",
-              border: "1px solid #d1d5db",
-              color: "#374151",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "9px 16px",
+              background: "linear-gradient(135deg, #0070ba 0%, #003087 100%)",
+              border: "1px solid rgba(0, 195, 255, 0.4)",
+              color: "#ffffff",
               borderRadius: "6px",
               fontSize: "13px",
-              fontWeight: "600",
+              fontWeight: "700",
               cursor: "pointer",
+              boxShadow: "0 0 14px rgba(0, 112, 186, 0.3)",
             }}
           >
-            View Demand Graphs & Analytics →
+            <Icons.TrendingUp /> Run Customer Investment Simulator →
           </button>
         }
       />
 
-      {/* KPI Stats */}
+      {/* KPI Stats with Controlled Luminescence */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
-        <Stat label="Active Demand Pools" value="4 Active" sub="128 units total" icon={Icons.Pools} />
-        <Stat label="Total Cash Savings" value="$9,575 USD" sub="Across 4 equipment pools" delta icon={Icons.Zap} />
-        <Stat label="PayPal Escrow Processed" value="$18,250" sub="100% bilateral hold rate" icon={Icons.PayPal} />
-        <Stat label="Pending Authorizations" value="2 Orders" sub="Awaiting buyer signature" icon={Icons.Approvals} />
+        <Stat label="Active Equipment Pools" value="4 Active" sub="128 units aggregated" glowColor="#00c3ff" />
+        <Stat label="Net Cash Saved for Buyers" value="$9,575 USD" sub="Vs retail procurement" delta glowColor="#10b981" />
+        <Stat label="Average Customer ROI" value="+16.8%" sub="Direct margin boost" delta glowColor="#10b981" />
+        <Stat label="Fulfillment Probability" value="98.6%" sub="Backed by PayPal Escrow" glowColor="#00c3ff" />
       </div>
 
-      {/* FEATURE: Interactive Savings & PayPal Order Calculator */}
-      <Card style={{ marginBottom: "24px", border: "1px solid #0070ba", background: "#f0f7fd" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#0070ba", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              Interactive Collective Procurement Calculator
-            </div>
-            <div style={{ fontSize: "17px", fontWeight: "700", color: "#003087" }}>
-              Calculate Immediate PayPal Escrow Hold & Savings
-            </div>
-          </div>
-          <span style={{ fontSize: "12px", background: "#ffffff", color: "#0070ba", border: "1px solid #bfdbfe", padding: "4px 10px", borderRadius: "6px", fontWeight: "600" }}>
-            Unlocks PayPal Instant Volume Escrow
-          </span>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "24px" }}>
-          {/* Left: Inputs */}
-          <div>
-            <label style={{ display: "block", fontSize: "12.5px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>
-              Select Mission-Critical Equipment:
-            </label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-              {Object.entries(equipmentCatalog).map(([key, item]) => (
-                <button
-                  key={key}
-                  onClick={() => setCalcEquipment(key)}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: "6px",
-                    textAlign: "left",
-                    background: calcEquipment === key ? "#ffffff" : "#f8fafc",
-                    border: `1.5px solid ${calcEquipment === key ? "#0070ba" : "#e2e8f0"}`,
-                    color: calcEquipment === key ? "#003087" : "#4b5563",
-                    fontSize: "12.5px",
-                    fontWeight: calcEquipment === key ? "600" : "500",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
-                  <div style={{ fontSize: "11px", color: "#059669", marginTop: "2px" }}>
-                    ${item.collective}/unit (save ${item.retail - item.collective})
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <div style={{ marginBottom: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", fontWeight: "600", marginBottom: "6px" }}>
-                <span>Order Quantity:</span>
-                <span style={{ color: "#0070ba", fontSize: "14px" }}>{calcUnits} units</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="40"
-                value={calcUnits}
-                onChange={(e) => setCalcUnits(parseInt(e.target.value))}
-                style={{ width: "100%", accentColor: "#0070ba", cursor: "pointer" }}
-              />
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#9ca3af" }}>
-                <span>1 unit</span>
-                <span>20 units</span>
-                <span>40 units</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Real-time Financial Breakdown & Direct PayPal Authorization */}
-          <div style={{
-            background: "#ffffff",
-            border: "1px solid #bfdbfe",
-            borderRadius: "8px",
-            padding: "16px 20px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#6b7280", marginBottom: "6px" }}>
-                <span>Standard Retail Baseline:</span>
-                <span style={{ textDecoration: "line-through" }}>${retailSubtotal.toLocaleString()} USD</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#059669", fontWeight: "600", marginBottom: "10px" }}>
-                <span>MINT Negotiated Discount ({savingsPct}%):</span>
-                <span>-${calculatedSavings.toLocaleString()} USD</span>
-              </div>
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                paddingTop: "10px",
-                borderTop: "1px solid #e5e7eb",
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#111827",
-              }}>
-                <span>PayPal Escrow Hold:</span>
-                <span style={{ color: "#0070ba" }}>${collectiveSubtotal.toLocaleString()} USD</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => onCheckoutPool({
-                name: selectedItem.name,
-                qty: calcUnits,
-                amount: collectiveSubtotal,
-                savings: calculatedSavings,
-                id: selectedItem.poolId,
-              })}
-              style={{
-                marginTop: "16px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                padding: "11px 18px",
-                background: "#ffc439",
-                color: "#003087",
-                borderRadius: "20px",
-                fontSize: "13.5px",
-                fontWeight: "700",
-                cursor: "pointer",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
-              }}
-            >
-              <Icons.PayPal /> Authorize ${collectiveSubtotal.toLocaleString()} with PayPal
-            </button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Featured Water Pump Collective Pool */}
-      <Card>
+      {/* Customer Hero Card */}
+      <Card glow style={{ marginBottom: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
           <div>
-            <div style={{ fontSize: "11.5px", color: "#0070ba", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "4px" }}>
-              Active Demand Pool #PO-2026-08
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#00c3ff", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "4px" }}>
+              Ready for Settlement · Pool #PO-2026-08
             </div>
-            <div style={{ fontSize: "17px", fontWeight: "700", color: "#111827" }}>
-              Industrial Centrifugal Water Pump 5HP
+            <div style={{ fontSize: "18px", fontWeight: "800", color: "#f8fafc" }}>
+              Industrial Centrifugal Water Pump 5HP (50 Units Aggregated)
             </div>
-            <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px" }}>
-              Specifications: Flow 50 m³/h · Head 30 m · IP55 Weatherproof · 3-Phase 400V
+            <div style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px" }}>
+              AquaFlow (12 units) · GreenPump (15 units) · HydroTech (23 units)
             </div>
           </div>
           <span style={{
             fontSize: "12px",
-            fontWeight: "600",
+            fontWeight: "700",
             padding: "4px 10px",
             borderRadius: "6px",
-            background: "#ecfdf5",
-            color: "#059669",
-            border: "1px solid #a7f3d0",
+            background: "rgba(16, 185, 129, 0.15)",
+            color: "#10b981",
+            border: "1px solid rgba(16, 185, 129, 0.35)",
+            boxShadow: "0 0 10px rgba(16, 185, 129, 0.2)",
           }}>
-            100% Volume Locked (50/50 units)
+            100% Target Reached · $2,500 Savings Locked
           </span>
-        </div>
-
-        {/* Demand Progress Bar */}
-        <div style={{ marginBottom: "16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#6b7280", marginBottom: "6px" }}>
-            <span>Target Volume: 50 units</span>
-            <strong style={{ color: "#0070ba" }}>50 units committed by 3 enterprises</strong>
-          </div>
-          <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-            <div style={{ width: "100%", height: "100%", background: "#0070ba", borderRadius: "4px" }} />
-          </div>
         </div>
 
         <div style={{
@@ -603,482 +480,658 @@ function CommandCentre({ onNavigate, onCheckoutPool }) {
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: "16px",
           padding: "16px",
-          background: "#f8fafc",
+          background: "#080d18",
           borderRadius: "8px",
-          border: "1px solid #e2e8f0",
+          border: "1px solid rgba(255, 255, 255, 0.06)",
           marginBottom: "18px",
         }}>
           <div>
-            <div style={{ color: "#6b7280", fontSize: "12px" }}>Negotiated Unit Price</div>
-            <div style={{ fontSize: "18px", fontWeight: "700", color: "#059669", marginTop: "2px" }}>$365.00 / unit</div>
+            <div style={{ color: "#64748b", fontSize: "12px" }}>Negotiated Unit Price</div>
+            <div style={{ fontSize: "19px", fontWeight: "800", color: "#10b981", marginTop: "2px" }}>$365.00 <span style={{ fontSize: "12px", textDecoration: "line-through", color: "#64748b" }}>$415.00</span></div>
           </div>
           <div>
-            <div style={{ color: "#6b7280", fontSize: "12px" }}>Direct Collective Savings</div>
-            <div style={{ fontSize: "18px", fontWeight: "700", color: "#059669", marginTop: "2px" }}>$2,500.00 USD</div>
+            <div style={{ color: "#64748b", fontSize: "12px" }}>Collective Cash Saved</div>
+            <div style={{ fontSize: "19px", fontWeight: "800", color: "#10b981", marginTop: "2px" }}>$2,500.00 USD</div>
           </div>
           <div>
-            <div style={{ color: "#6b7280", fontSize: "12px" }}>Total Pool PayPal Value</div>
-            <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827", marginTop: "2px" }}>$18,250.00 USD</div>
+            <div style={{ color: "#64748b", fontSize: "12px" }}>Total PayPal Settlement Hold</div>
+            <div style={{ fontSize: "19px", fontWeight: "800", color: "#00c3ff", marginTop: "2px" }}>$18,250.00 USD</div>
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-          <button
-            onClick={() => onNavigate("pools")}
-            style={{
-              padding: "9px 16px",
-              background: "#ffffff",
-              border: "1px solid #d1d5db",
-              color: "#374151",
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            Browse All Active Pools (4)
-          </button>
-          <button
-            onClick={() => onNavigate("approvals")}
-            style={{
-              padding: "9px 18px",
-              background: "#0070ba",
-              color: "#ffffff",
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              boxShadow: "0 1px 2px rgba(0, 112, 186, 0.2)",
-            }}
-          >
-            Review PayPal Escrow Approvals →
-          </button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: "12.5px", color: "#94a3b8" }}>
+            Bilateral escrow holds are currently active on PayPal Orders v2. Ready to capture upon final dispatch confirmation.
+          </div>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={() => onNavigate("pools")}
+              style={{
+                padding: "9px 16px",
+                background: "#142036",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "#f8fafc",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              Browse Active Pools (4)
+            </button>
+            <button
+              onClick={() => onNavigate("approvals")}
+              style={{
+                padding: "9px 18px",
+                background: "#0070ba",
+                color: "#ffffff",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: "700",
+                cursor: "pointer",
+                boxShadow: "0 0 14px rgba(0, 112, 186, 0.35)",
+              }}
+            >
+              Review PayPal Escrow Approvals →
+            </button>
+          </div>
         </div>
       </Card>
     </>
   );
 }
 
-// --- View 2: Interactive Graphs & Demand/Savings Analytics ---
+// --- View 2: Customer ROI & Investment Probability Engine (The Core Requested Feature) ---
 
-function SavingsAndDemandAnalytics({ onNavigate }) {
-  const [timeframe, setTimeframe] = useState("1Y");
-  const [activeCurvePoint, setActiveCurvePoint] = useState(2); // 50 units tier
+function CustomerProbabilityEngine({ onStartCheckout }) {
+  const [units, setUnits] = useState(12);
+  const [equipmentType, setEquipmentType] = useState("pump");
 
-  const monthlyTrendData = [
-    { month: "Jun 2025", retail: 42.2, collective: 36.5, savings: 5.7, volume: 36.5 },
-    { month: "Aug 2025", retail: 58.1, collective: 49.9, savings: 8.2, volume: 49.9 },
-    { month: "Oct 2025", retail: 64.3, collective: 54.8, savings: 9.5, volume: 54.8 },
-    { month: "Dec 2025", retail: 82.0, collective: 69.7, savings: 12.3, volume: 69.7 },
-    { month: "Feb 2026", retail: 71.5, collective: 60.9, savings: 10.6, volume: 60.9 },
-    { month: "Apr 2026", retail: 89.4, collective: 75.2, savings: 14.2, volume: 75.2 },
-    { month: "Jun 2026", retail: 98.2, collective: 81.8, savings: 16.4, volume: 81.8 },
-    { month: "Aug 2026", retail: 112.0, collective: 92.5, savings: 19.5, volume: 92.5 },
-    { month: "Oct 2026", retail: 128.0, collective: 104.5, savings: 23.5, volume: 104.5 },
-    { month: "Dec 2026", retail: 145.0, collective: 117.2, savings: 27.8, volume: 117.2 },
-  ];
+  const equipmentOptions = {
+    pump: { name: "Industrial Centrifugal Pump 5HP", retail: 415.00, negotiated: 365.00, poolTarget: 50, existingCommitted: 38 },
+    motor: { name: "3-Phase Induction Motor 15kW", retail: 570.00, negotiated: 480.00, poolTarget: 30, existingCommitted: 20 },
+    flow: { name: "Electromagnetic Flowmeter DN80", retail: 475.00, negotiated: 390.00, poolTarget: 25, existingCommitted: 14 },
+    valve: { name: "High-Pressure Gate Valve PN25", retail: 260.00, negotiated: 210.00, poolTarget: 50, existingCommitted: 32 },
+  };
 
-  const volumeTiers = [
-    { units: 10, price: 415, savings: 0, label: "Retail Single Buyer", note: "1-15 units baseline" },
-    { units: 25, price: 390, savings: 25, label: "Tier-3 Collective", note: "16-30 units ($25/u discount)" },
-    { units: 50, price: 365, savings: 50, label: "Tier-2 Collective (Active)", note: "31-60 units ($50/u discount)" },
-    { units: 75, price: 345, savings: 70, label: "Tier-1 Enterprise", note: "61-80 units ($70/u discount)" },
-    { units: 100, price: 330, savings: 85, label: "Mega-Pool Super Tier", note: "81-100+ units ($85/u discount)" },
-  ];
+  const selected = equipmentOptions[equipmentType];
+
+  // Mathematical Probability & Customer Financial Model
+  const investedAmount = units * selected.negotiated;
+  const retailBaseline = units * selected.retail;
+  const directSavings = retailBaseline - investedAmount;
+
+  const totalPoolAfterInvestment = selected.existingCommitted + units;
+  const progressTowardsTarget = Math.min(100, Math.round((totalPoolAfterInvestment / selected.poolTarget) * 100));
+
+  // Fulfillment Probability Algorithm
+  let fulfillmentProbability = 68.0;
+  if (totalPoolAfterInvestment >= selected.poolTarget) {
+    fulfillmentProbability = 98.8;
+  } else if (totalPoolAfterInvestment >= selected.poolTarget * 0.9) {
+    fulfillmentProbability = 93.5;
+  } else if (totalPoolAfterInvestment >= selected.poolTarget * 0.8) {
+    fulfillmentProbability = 86.2;
+  } else {
+    fulfillmentProbability = Math.min(80, 68 + (totalPoolAfterInvestment / selected.poolTarget) * 15);
+  }
+
+  // Gateway Fee comparison for customer
+  const paypalFee = (investedAmount * 0.015).toFixed(2); // 1.5%
+  const traditionalFee = ((investedAmount * 0.035) + 45.00).toFixed(2); // 3.5% + wire fee
+  const financingSaved = (traditionalFee - paypalFee).toFixed(2);
+  const totalNetCustomerGain = (directSavings + parseFloat(financingSaved)).toFixed(2);
+  const customerRoi = ((totalNetCustomerGain / investedAmount) * 100).toFixed(1);
 
   return (
     <>
       <PageHeader
-        title="Procurement Demand & Savings Graphs"
-        description="Comprehensive volume elasticity curves and total PayPal Payment Volume (TPV) settlement analytics."
+        title="Customer Investment & Probability Engine"
+        description="Simulate your enterprise capital commitment: see fulfillment probability, PayPal fee savings, and net ROI margin boost."
+        badge="Probability AI"
       />
 
-      {/* Top Telemetry */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
-        <Stat label="Cumulative Cash Saved" value="$147,700" sub="Vs retail procurement" delta />
-        <Stat label="Total PayPal TPV" value="$678,000" sub="100% verified settlement" />
-        <Stat label="Escrow Capture Rate" value="100.0%" sub="0 disputes or chargebacks" delta />
-        <Stat label="Avg Hold Duration" value="18.4 Hours" sub="Rapid bilateral release" />
+      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px", marginBottom: "24px" }}>
+        {/* Left: Interactive Input Panel */}
+        <Card glow>
+          <div style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "6px" }}>
+            1. Configure Your Procurement Commitment
+          </div>
+          <div style={{ fontSize: "12.5px", color: "#94a3b8", marginBottom: "18px" }}>
+            Adjust your order size to calculate fulfillment probability and payment charges.
+          </div>
+
+          <div style={{ marginBottom: "18px" }}>
+            <label style={{ display: "block", fontSize: "12.5px", color: "#64748b", fontWeight: "600", marginBottom: "8px" }}>
+              Select Equipment Category:
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              {Object.entries(equipmentOptions).map(([key, item]) => (
+                <button
+                  key={key}
+                  onClick={() => setEquipmentType(key)}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: "6px",
+                    textAlign: "left",
+                    background: equipmentType === key ? "rgba(0, 112, 186, 0.25)" : "#080d18",
+                    border: `1.5px solid ${equipmentType === key ? "#00c3ff" : "rgba(255, 255, 255, 0.08)"}`,
+                    color: equipmentType === key ? "#f8fafc" : "#94a3b8",
+                    cursor: "pointer",
+                    boxShadow: equipmentType === key ? "0 0 12px rgba(0, 195, 255, 0.2)" : "none",
+                  }}
+                >
+                  <div style={{ fontSize: "12.5px", fontWeight: "700" }}>{item.name}</div>
+                  <div style={{ fontSize: "11px", color: "#10b981", marginTop: "2px" }}>
+                    ${item.negotiated}/unit (Save ${item.retail - item.negotiated})
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Unit Slider */}
+          <div style={{ marginBottom: "22px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "#f8fafc" }}>Units to Commit:</span>
+              <span style={{ fontSize: "20px", fontWeight: "800", color: "#00c3ff" }} className="tabular-nums">
+                {units} units (${investedAmount.toLocaleString()} USD)
+              </span>
+            </div>
+            <input
+              type="range"
+              min="2"
+              max="30"
+              value={units}
+              onChange={(e) => setUnits(parseInt(e.target.value))}
+              style={{ width: "100%", accentColor: "#00c3ff", cursor: "pointer", height: "6px" }}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
+              <span>2 units ($730)</span>
+              <span>15 units ($5,475)</span>
+              <span>30 units ($10,950)</span>
+            </div>
+          </div>
+
+          {/* Pool Contribution Summary */}
+          <div style={{
+            background: "#080d18",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
+            borderRadius: "8px",
+            padding: "14px 16px",
+            fontSize: "13px",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+              <span style={{ color: "#94a3b8" }}>Current Pool Status:</span>
+              <span style={{ color: "#f8fafc" }}>{selected.existingCommitted} units committed by peers</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+              <span style={{ color: "#94a3b8" }}>With Your Commitment:</span>
+              <strong style={{ color: "#00c3ff" }}>{totalPoolAfterInvestment} / {selected.poolTarget} units ({progressTowardsTarget}%)</strong>
+            </div>
+            <div style={{ width: "100%", height: "6px", background: "#142036", borderRadius: "3px", overflow: "hidden", marginTop: "8px" }}>
+              <div style={{ width: `${progressTowardsTarget}%`, height: "100%", background: progressTowardsTarget >= 100 ? "#10b981" : "#00c3ff", boxShadow: "0 0 10px #00c3ff" }} />
+            </div>
+          </div>
+        </Card>
+
+        {/* Right: Probability Dial & Financial Gain */}
+        <Card glow style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "4px" }}>
+              2. Probability & Investment Outcome
+            </div>
+            <div style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "20px" }}>
+              Statistical likelihood of pool locking tier-1 wholesale pricing.
+            </div>
+
+            {/* Glowing Probability Gauge Indicator */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "20px",
+              padding: "16px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, rgba(0, 112, 186, 0.15) 0%, rgba(0, 195, 255, 0.08) 100%)",
+              border: "1px solid rgba(0, 195, 255, 0.3)",
+              boxShadow: "0 0 18px rgba(0, 112, 186, 0.2)",
+              marginBottom: "18px",
+            }}>
+              <div style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                background: "#080d18",
+                border: "4px solid #00c3ff",
+                boxShadow: "0 0 16px rgba(0, 195, 255, 0.4)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <div style={{ fontSize: "20px", fontWeight: "800", color: "#ffffff" }}>{fulfillmentProbability}%</div>
+                <div style={{ fontSize: "9px", color: "#00c3ff", textTransform: "uppercase", fontWeight: "700" }}>Probability</div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#f8fafc" }}>
+                  {totalPoolAfterInvestment >= selected.poolTarget ? "Tier-1 Pricing Guaranteed" : "Extremely High Fulfillment Confidence"}
+                </div>
+                <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "3px", lineHeight: "1.4" }}>
+                  Statistical cycle confirms remaining units will be captured before 30-day RFQ expiration.
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Returns Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px", fontSize: "12.5px" }}>
+              <div style={{ background: "#080d18", padding: "10px 14px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <div style={{ color: "#64748b" }}>Direct Equipment Savings:</div>
+                <div style={{ fontSize: "16px", fontWeight: "800", color: "#10b981", marginTop: "2px" }}>+${directSavings.toLocaleString()} USD</div>
+              </div>
+              <div style={{ background: "#080d18", padding: "10px 14px", borderRadius: "6px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <div style={{ color: "#64748b" }}>PayPal Fee vs Bank Wire:</div>
+                <div style={{ fontSize: "16px", fontWeight: "800", color: "#00c3ff", marginTop: "2px" }}>Save ${financingSaved}</div>
+              </div>
+            </div>
+
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "12px 16px",
+              background: "#080d18",
+              borderRadius: "6px",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              boxShadow: "0 0 12px rgba(16, 185, 129, 0.12)",
+              marginBottom: "18px",
+            }}>
+              <div>
+                <div style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", fontWeight: "700" }}>Net Enterprise Capital Gain</div>
+                <div style={{ fontSize: "18px", fontWeight: "800", color: "#10b981" }}>+${totalNetCustomerGain} USD</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "11px", color: "#64748b" }}>Annualized ROI Margin</div>
+                <div style={{ fontSize: "18px", fontWeight: "800", color: "#10b981" }}>+{customerRoi}%</div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onStartCheckout({
+              id: 1,
+              name: selected.name,
+              qty: units,
+              amount: investedAmount,
+              savings: directSavings,
+            })}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              padding: "12px 20px",
+              background: "#ffc439",
+              color: "#003087",
+              borderRadius: "24px",
+              fontSize: "14.5px",
+              fontWeight: "800",
+              cursor: "pointer",
+              boxShadow: "0 0 18px rgba(255, 196, 57, 0.35)",
+            }}
+          >
+            <Icons.PayPal /> Authorize ${investedAmount.toLocaleString()} via PayPal Escrow
+          </button>
+        </Card>
       </div>
 
-      {/* GRAPH 1: Interactive Monthly Spend & Savings Comparison Area/Line Chart */}
-      <Card style={{ marginBottom: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+      {/* GRAPH: Probability Curve vs Capital Invested */}
+      <Card glow>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <div>
-            <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827" }}>
-              Procurement Spend & PayPal Settlement Progression
+            <div style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc" }}>
+              Customer Capital Allocation vs Probability Curve
             </div>
-            <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px" }}>
-              Visualizing Historical Retail Invoices vs MINT Collective PayPal Volume (in thousands USD)
+            <div style={{ fontSize: "12.5px", color: "#94a3b8", marginTop: "2px" }}>
+              Simulates how incremental enterprise commitments accelerate pool fulfillment towards 100% certainty.
             </div>
           </div>
-          <div style={{ display: "flex", gap: "6px" }}>
-            {["6M", "1Y", "All Time"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTimeframe(t)}
-                style={{
-                  padding: "5px 12px",
-                  borderRadius: "4px",
-                  background: timeframe === t ? "#0070ba" : "#f1f5f9",
-                  color: timeframe === t ? "#ffffff" : "#4b5563",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                }}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <span style={{ fontSize: "11px", color: "#00c3ff", background: "rgba(0, 195, 255, 0.12)", padding: "4px 8px", borderRadius: "4px" }}>
+            Stochastic Monte Carlo Model
+          </span>
         </div>
 
-        {/* SVG Graph */}
-        <div style={{ width: "100%", height: "240px", position: "relative" }}>
-          <svg viewBox="0 0 800 220" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-            {/* Grid Lines */}
-            <line x1="40" y1="20" x2="780" y2="20" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="40" y1="70" x2="780" y2="70" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="40" y1="120" x2="780" y2="120" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="40" y1="170" x2="780" y2="170" stroke="#e5e7eb" strokeWidth="1.5" />
+        <div style={{ width: "100%", height: "200px" }}>
+          <svg viewBox="0 0 800 180" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+            {/* Grid */}
+            <line x1="50" y1="20" x2="760" y2="20" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+            <line x1="50" y1="70" x2="760" y2="70" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+            <line x1="50" y1="120" x2="760" y2="120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+            <line x1="50" y1="160" x2="760" y2="160" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
 
-            {/* Y Axis Labels */}
-            <text x="32" y="24" fill="#9ca3af" fontSize="10" textAnchor="end">$150k</text>
-            <text x="32" y="74" fill="#9ca3af" fontSize="10" textAnchor="end">$100k</text>
-            <text x="32" y="124" fill="#9ca3af" fontSize="10" textAnchor="end">$50k</text>
-            <text x="32" y="174" fill="#9ca3af" fontSize="10" textAnchor="end">$0</text>
+            <text x="40" y="24" fill="#64748b" fontSize="10" textAnchor="end">100%</text>
+            <text x="40" y="74" fill="#64748b" fontSize="10" textAnchor="end">85%</text>
+            <text x="40" y="124" fill="#64748b" fontSize="10" textAnchor="end">70%</text>
 
-            {/* Area under PayPal Volume Curve */}
+            {/* Glowing Gradient Curve */}
+            <defs>
+              <linearGradient id="probGlow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00c3ff" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#00c3ff" stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
+
             <polygon
-              points="60,170 60,128 140,113 220,107 300,90 380,100 460,84 540,76 620,63 700,50 780,36 780,170"
-              fill="rgba(0, 112, 186, 0.08)"
+              points="80,160 80,115 220,90 380,38 540,26 720,20 720,160"
+              fill="url(#probGlow)"
             />
 
-            {/* Retail Cost Line (Dashed Gray) */}
             <polyline
-              points="60,122 140,103 220,96 300,75 380,88 460,68 540,58 620,43 700,25 780,10"
+              points="80,115 220,90 380,38 540,26 720,20"
               fill="none"
-              stroke="#9ca3af"
-              strokeWidth="2"
-              strokeDasharray="4 4"
+              stroke="#00c3ff"
+              strokeWidth="3"
+              style={{ filter: "drop-shadow(0 0 8px #00c3ff)" }}
             />
 
-            {/* MINT + PayPal Collective Volume Line (Solid PayPal Blue) */}
-            <polyline
-              points="60,128 140,113 220,107 300,90 380,100 460,84 540,76 620,63 700,50 780,36"
-              fill="none"
-              stroke="#0070ba"
-              strokeWidth="2.5"
-            />
-
-            {/* Savings Delta Line (Green) */}
-            <polyline
-              points="60,163 140,160 220,158 300,155 380,157 460,153 540,150 620,146 700,142 780,137"
-              fill="none"
-              stroke="#059669"
-              strokeWidth="2"
-            />
-
-            {/* Data Points on PayPal Line */}
             {[
-              [60, 128], [140, 113], [220, 107], [300, 90], [380, 100],
-              [460, 84], [540, 76], [620, 63], [700, 50], [780, 36],
-            ].map(([x, y], idx) => (
-              <circle key={idx} cx={x} cy={y} r="4" fill="#ffffff" stroke="#0070ba" strokeWidth="2" />
-            ))}
-
-            {/* X Axis Labels */}
-            {monthlyTrendData.map((d, idx) => (
-              <text key={idx} x={60 + idx * 80} y="192" fill="#6b7280" fontSize="10" textAnchor="middle">
-                {d.month.split(" ")[0]}
-              </text>
+              [80, 115, "4 units (72%)", "$1,460"],
+              [220, 90, "8 units (81.5%)", "$2,920"],
+              [380, 38, "12 units (94.8%)", "$4,380"],
+              [540, 26, "16 units (97.5%)", "$5,840"],
+              [720, 20, "20+ units (99.2%)", "$7,300"],
+            ].map(([x, y, label, amount], idx) => (
+              <g key={idx}>
+                <circle cx={x} cy={y} r="5" fill="#ffffff" stroke="#00c3ff" strokeWidth="2" />
+                <text x={x} y={y - 12} fill="#f8fafc" fontSize="11" fontWeight="700" textAnchor="middle">{label}</text>
+                <text x={x} y="174" fill="#64748b" fontSize="10" textAnchor="middle">{amount}</text>
+              </g>
             ))}
           </svg>
         </div>
-
-        {/* Legend */}
-        <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginTop: "14px", fontSize: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ width: "12px", height: "3px", background: "#9ca3af", borderTop: "1px dashed #9ca3af" }} />
-            <span style={{ color: "#6b7280" }}>Retail Fragmented Cost</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ width: "12px", height: "3px", background: "#0070ba" }} />
-            <span style={{ color: "#003087", fontWeight: "600" }}>MINT Collective PayPal Volume</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ width: "12px", height: "3px", background: "#059669" }} />
-            <span style={{ color: "#059669", fontWeight: "600" }}>Net Direct Cash Savings</span>
-          </div>
-        </div>
       </Card>
+    </>
+  );
+}
 
-      {/* GRAPH 2: Volume Elasticity Tier Curve */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px" }}>
-        <Card>
-          <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
-            Volume Discount Elasticity Curve
-          </div>
-          <div style={{ fontSize: "12.5px", color: "#6b7280", marginBottom: "16px" }}>
-            Click a volume tier to inspect supplier pricing and PayPal hold requirements
-          </div>
+// --- View 3: Extended PayPal Enterprise Services & Multi-Gateway Hub ---
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {volumeTiers.map((t, idx) => {
-              const isSelected = activeCurvePoint === idx;
-              return (
-                <div
-                  key={t.units}
-                  onClick={() => setActiveCurvePoint(idx)}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    background: isSelected ? "#f0f7fd" : "#f8fafc",
-                    border: `1.5px solid ${isSelected ? "#0070ba" : "#e2e8f0"}`,
-                    cursor: "pointer",
-                    transition: "all 0.1s ease",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: "13.5px", fontWeight: "600", color: isSelected ? "#003087" : "#111827" }}>
-                      {t.label} ({t.units} units)
-                    </div>
-                    <div style={{ fontSize: "11.5px", color: "#6b7280" }}>{t.note}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: "15px", fontWeight: "700", color: isSelected ? "#0070ba" : "#111827" }}>
-                      ${t.price} <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: "400" }}>/ unit</span>
-                    </div>
-                    {t.savings > 0 && (
-                      <div style={{ fontSize: "11px", color: "#059669", fontWeight: "600" }}>
-                        Save ${t.savings * t.units} total
-                      </div>
-                    )}
-                  </div>
+function PayPalEnterpriseServicesHub({ onNavigate }) {
+  const [services, setServices] = useState([
+    {
+      id: "paypal_escrow",
+      name: "PayPal Orders v2 Bilateral Escrow",
+      badge: "Core Active Rail",
+      status: "Active & Operating",
+      description: "Server-side cryptographic escrow hold. Zero commingling of customer funds. Auto-capture upon verified physical dispatch.",
+      customer_benefit: "Eliminates counterparty risk. 180-day buyer protection policy.",
+      processing_fee: "1.5% flat (Save 2.0% vs traditional bank wire & factoring)",
+      recommended_for: "All collective procurement pools ($1,000 - $100,000)",
+      activeState: true,
+    },
+    {
+      id: "paypal_working_capital",
+      name: "PayPal Commercial Working Capital",
+      badge: "Growth Financing",
+      status: "Pre-Approved",
+      description: "Instant pre-approved credit lines from $10,000 to $50,000 based on procurement invoice history with single fixed fee.",
+      customer_benefit: "Enables purchasing larger volume tiers without depleting enterprise operating cash flow.",
+      processing_fee: "Single fixed fee (No compounding monthly interest)",
+      recommended_for: "SMEs scaling orders from 10 units to 50+ bulk tiers",
+      activeState: true,
+    },
+    {
+      id: "paypal_subscriptions",
+      name: "PayPal Automated B2B Subscriptions",
+      badge: "Recurring Replenishment",
+      status: "Available to Activate",
+      description: "Automated recurring order scheduling for periodic industrial consumables (mechanical seals, filter media, replacement impellers).",
+      customer_benefit: "Zero downtime from stockouts. Automatically aggregates recurring schedules into bulk tiers.",
+      processing_fee: "Standard PayPal merchant processing",
+      recommended_for: "Recurring 6-month & 12-month maintenance contracts",
+      activeState: false,
+    },
+    {
+      id: "ach_direct_rail",
+      name: "PayPal Braintree Corporate ACH Rail",
+      badge: "Enterprise High-Volume",
+      status: "Available to Activate",
+      description: "Direct bank-to-bank automated clearing house settlement for large civil infrastructure purchase orders exceeding $50,000.",
+      customer_benefit: "Lowest cost per transaction ($5 cap) for mega-capital equipment procurements.",
+      processing_fee: "0.75% capped at $5.00 per transaction",
+      recommended_for: "Civil engineering and municipal orders > $50,000",
+      activeState: false,
+    },
+    {
+      id: "iot_escrow_release",
+      name: "IoT Smart Delivery Verification Lock",
+      badge: "Automated Quality Lock",
+      status: "Active Telemetry",
+      description: "PayPal webhook integration with factory IoT telemetry. Funds released from escrow only when digital signature and flow sensors confirm spec compliance.",
+      customer_benefit: "Guarantees pump flow rate (50 m³/h) and motor insulation (IP55) before vendor payout.",
+      processing_fee: "Included in PayPal Orders v2",
+      recommended_for: "Precision engineered pumps and calibrated sensors",
+      activeState: true,
+    },
+  ]);
+
+  function toggleService(id) {
+    setServices((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, activeState: !s.activeState } : s))
+    );
+  }
+
+  return (
+    <>
+      <PageHeader
+        title="Enterprise Payment Services & Gateway Hub"
+        description="Adopt institutional PayPal financial services in your company: working capital, automated subscriptions, and ACH settlement."
+        badge="Fintech Services"
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px", marginBottom: "24px" }}>
+        {services.map((s) => (
+          <Card key={s.id} glow={s.activeState}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>{s.name}</div>
+                  <span style={{
+                    fontSize: "10.5px",
+                    fontWeight: "700",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    background: s.activeState ? "rgba(0, 195, 255, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                    color: s.activeState ? "#00c3ff" : "#64748b",
+                    border: `1px solid ${s.activeState ? "rgba(0, 195, 255, 0.3)" : "rgba(255, 255, 255, 0.1)"}`,
+                  }}>
+                    {s.badge}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        {/* PayPal Gateway Settlement Share */}
-        <Card>
-          <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
-            PayPal Payment Source Share
-          </div>
-          <div style={{ fontSize: "12.5px", color: "#6b7280", marginBottom: "16px" }}>
-            Breakdown of commercial funding methods across active pools
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "4px" }}>
-                <span style={{ fontWeight: "600", color: "#003087" }}>PayPal Enterprise Wallet</span>
-                <span style={{ fontWeight: "700" }}>58% ($393,240)</span>
+                <div style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px", lineHeight: "1.5" }}>
+                  {s.description}
+                </div>
               </div>
-              <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                <div style={{ width: "58%", height: "100%", background: "#0070ba", borderRadius: "4px" }} />
-              </div>
+
+              <button
+                onClick={() => toggleService(s.id)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  background: s.activeState ? "rgba(16, 185, 129, 0.15)" : "#142036",
+                  color: s.activeState ? "#10b981" : "#94a3b8",
+                  border: `1px solid ${s.activeState ? "rgba(16, 185, 129, 0.4)" : "rgba(255, 255, 255, 0.12)"}`,
+                }}
+              >
+                {s.activeState ? "Active in Enterprise" : "Activate Rail"}
+              </button>
             </div>
 
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "4px" }}>
-                <span style={{ fontWeight: "600", color: "#059669" }}>PayPal Pay Later (Net 30 Escrow)</span>
-                <span style={{ fontWeight: "700" }}>26% ($176,280)</span>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1.5fr 1fr",
+              gap: "12px",
+              padding: "10px 14px",
+              background: "#080d18",
+              borderRadius: "6px",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+              fontSize: "12px",
+            }}>
+              <div>
+                <strong style={{ color: "#00c3ff" }}>Direct Customer Benefit:</strong>{" "}
+                <span style={{ color: "#f8fafc" }}>{s.customer_benefit}</span>
               </div>
-              <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                <div style={{ width: "26%", height: "100%", background: "#059669", borderRadius: "4px" }} />
+              <div style={{ textAlign: "right" }}>
+                <span style={{ color: "#64748b" }}>Processing Cost:</span>{" "}
+                <strong style={{ color: "#10b981" }}>{s.processing_fee}</strong>
               </div>
             </div>
-
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "4px" }}>
-                <span style={{ fontWeight: "600", color: "#374151" }}>PayPal Business Debit & Cards</span>
-                <span style={{ fontWeight: "700" }}>16% ($108,480)</span>
-              </div>
-              <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                <div style={{ width: "16%", height: "100%", background: "#2c2e2f", borderRadius: "4px" }} />
-              </div>
-            </div>
-          </div>
-
-          <div style={{
-            marginTop: "20px",
-            padding: "12px",
-            background: "#f0f7fd",
-            borderRadius: "6px",
-            border: "1px solid #bfdbfe",
-            fontSize: "12px",
-            color: "#003087",
-            lineHeight: "1.5",
-          }}>
-            <strong>PayPal Growth Engine:</strong> Collective procurement drives high-ticket B2B payment frequency to PayPal's REST v2 gateway, transitioning spot offline payments into automated cryptographic online capture.
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
     </>
   );
 }
 
-// --- View 3: Active Demand Pools Catalog ---
+// --- View 4: Active Demand Pools ---
 
-function ActivePoolsCatalog({ onCheckoutPool }) {
-  const [pools, setPools] = useState([
+function ActiveDemandPools({ onStartCheckout }) {
+  const pools = [
     {
       id: 1,
       name: "Industrial Centrifugal Water Pump 5HP",
       category: "Fluid Mechanics",
-      target_quantity: 50,
-      committed_quantity: 50,
-      retail_price: 415.00,
-      negotiated_price: 365.00,
-      savings_per_unit: 50.00,
-      total_savings: 2500.00,
-      status: "Ready for PayPal Capture",
-      completion_pct: 100,
-      days_remaining: 8,
+      target: 50,
+      committed: 50,
+      retail: 415,
+      negotiated: 365,
+      savings: 2500,
+      status: "100% Target Reached",
+      pct: 100,
       specs: "Flow 50 m³/h · Head 30m · IP55 · 400V 3-Phase",
-      buyers_count: 3,
     },
     {
       id: 2,
       name: "High-Efficiency 3-Phase Induction Motors 15kW",
       category: "Electromechanical",
-      target_quantity: 30,
-      committed_quantity: 24,
-      retail_price: 570.00,
-      negotiated_price: 480.00,
-      savings_per_unit: 90.00,
-      total_savings: 2700.00,
+      target: 30,
+      committed: 24,
+      retail: 570,
+      negotiated: 480,
+      savings: 2700,
       status: "Active Aggregation",
-      completion_pct: 80,
-      days_remaining: 14,
+      pct: 80,
       specs: "15kW (20HP) · 1460 RPM · IE3 Premium · Cast Iron",
-      buyers_count: 4,
     },
     {
       id: 3,
       name: "Smart Electromagnetic Flowmeters DN80",
       category: "Industrial Sensors",
-      target_quantity: 25,
-      committed_quantity: 16,
-      retail_price: 475.00,
-      negotiated_price: 390.00,
-      savings_per_unit: 85.00,
-      total_savings: 2125.00,
+      target: 25,
+      committed: 16,
+      retail: 475,
+      negotiated: 390,
+      savings: 2125,
       status: "Active Aggregation",
-      completion_pct: 64,
-      days_remaining: 18,
+      pct: 64,
       specs: "DN80 (3 inch) · Flanged PN16 · RS485 Modbus · PTFE",
-      buyers_count: 2,
     },
     {
       id: 4,
       name: "High-Pressure Industrial Gate Valves PN25",
       category: "Fluid Valves",
-      target_quantity: 50,
-      committed_quantity: 38,
-      retail_price: 260.00,
-      negotiated_price: 210.00,
-      savings_per_unit: 50.00,
-      total_savings: 2500.00,
+      target: 50,
+      committed: 38,
+      retail: 260,
+      negotiated: 210,
+      savings: 2500,
       status: "Active Aggregation",
-      completion_pct: 76,
-      days_remaining: 11,
+      pct: 76,
       specs: "DN100 · Flanged PN25 · WCB Cast Steel · Stainless Trim",
-      buyers_count: 5,
     },
-  ]);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/api/v1/demo/pools`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res && res.pools) setPools(res.pools);
-      })
-      .catch(() => {});
-  }, []);
+  ];
 
   return (
     <>
       <PageHeader
         title="Active Industrial Demand Pools"
-        description="Join an existing pool to combine purchasing power and authorize hold directly through PayPal."
+        description="Pools currently accumulating enterprise volume. Select an allocation to authorize hold with PayPal."
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         {pools.map((p) => (
-          <Card key={p.id}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+          <Card key={p.id} glow={p.pct === 100}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
               <div>
-                <span style={{ fontSize: "11px", fontWeight: "700", color: "#0070ba", background: "#f0f7fd", padding: "2px 8px", borderRadius: "4px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "700", color: "#00c3ff", background: "rgba(0, 195, 255, 0.12)", padding: "2px 8px", borderRadius: "4px" }}>
                   {p.category}
                 </span>
-                <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827", marginTop: "6px" }}>
+                <div style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginTop: "6px" }}>
                   {p.name}
                 </div>
               </div>
               <span style={{
-                fontSize: "11.5px",
-                fontWeight: "600",
+                fontSize: "11px",
+                fontWeight: "700",
                 padding: "3px 8px",
                 borderRadius: "4px",
-                background: p.completion_pct === 100 ? "#ecfdf5" : "#fffbeb",
-                color: p.completion_pct === 100 ? "#059669" : "#d97706",
-                border: `1px solid ${p.completion_pct === 100 ? "#a7f3d0" : "#fde68a"}`,
+                background: p.pct === 100 ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                color: p.pct === 100 ? "#10b981" : "#f59e0b",
+                border: `1px solid ${p.pct === 100 ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)"}`,
               }}>
                 {p.status}
               </span>
             </div>
 
-            <div style={{ fontSize: "12.5px", color: "#6b7280", marginBottom: "14px" }}>
+            <div style={{ fontSize: "12.5px", color: "#94a3b8", marginBottom: "14px" }}>
               {p.specs}
             </div>
 
-            {/* Progress Meter */}
+            {/* Progress bar */}
             <div style={{ marginBottom: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
-                <span style={{ color: "#6b7280" }}>{p.committed_quantity} of {p.target_quantity} units pooled</span>
-                <strong style={{ color: "#0070ba" }}>{p.completion_pct}%</strong>
+                <span style={{ color: "#64748b" }}>{p.committed} of {p.target} units committed</span>
+                <strong style={{ color: p.pct === 100 ? "#10b981" : "#00c3ff" }}>{p.pct}%</strong>
               </div>
-              <div style={{ width: "100%", height: "6px", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden" }}>
-                <div style={{ width: `${p.completion_pct}%`, height: "100%", background: p.completion_pct === 100 ? "#059669" : "#0070ba", borderRadius: "3px" }} />
+              <div style={{ width: "100%", height: "6px", background: "#142036", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ width: `${p.pct}%`, height: "100%", background: p.pct === 100 ? "#10b981" : "#00c3ff", boxShadow: p.pct === 100 ? "0 0 8px #10b981" : "0 0 8px #00c3ff" }} />
               </div>
             </div>
 
-            {/* Financial Details */}
+            {/* Price Box */}
             <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "10px",
+              display: "flex",
+              justifyContent: "space-between",
               padding: "10px 14px",
-              background: "#f8fafc",
+              background: "#080d18",
               borderRadius: "6px",
-              border: "1px solid #e2e8f0",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
               fontSize: "12.5px",
               marginBottom: "16px",
             }}>
               <div>
-                <span style={{ color: "#6b7280" }}>Negotiated Price:</span>{" "}
-                <strong style={{ color: "#059669" }}>${p.negotiated_price.toFixed(2)}</strong>{" "}
-                <span style={{ textDecoration: "line-through", color: "#9ca3af", fontSize: "11px" }}>${p.retail_price}</span>
+                <span style={{ color: "#64748b" }}>Negotiated:</span>{" "}
+                <strong style={{ color: "#10b981" }}>${p.negotiated.toFixed(2)}</strong>{" "}
+                <span style={{ textDecoration: "line-through", color: "#64748b", fontSize: "11px" }}>${p.retail}</span>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <span style={{ color: "#6b7280" }}>Collective Savings:</span>{" "}
-                <strong style={{ color: "#059669" }}>${p.total_savings.toLocaleString()}</strong>
+              <div>
+                <span style={{ color: "#64748b" }}>Collective Savings:</span>{" "}
+                <strong style={{ color: "#10b981" }}>${p.savings.toLocaleString()}</strong>
               </div>
             </div>
 
             <button
-              onClick={() => onCheckoutPool({
+              onClick={() => onStartCheckout({
                 id: p.id,
                 name: p.name,
                 qty: 10,
-                amount: p.negotiated_price * 10,
-                savings: p.savings_per_unit * 10,
+                amount: p.negotiated * 10,
+                savings: (p.retail - p.negotiated) * 10,
               })}
               style={{
                 width: "100%",
@@ -1086,17 +1139,17 @@ function ActivePoolsCatalog({ onCheckoutPool }) {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "8px",
-                padding: "9px 16px",
-                background: "#0070ba",
-                color: "#ffffff",
-                borderRadius: "6px",
+                padding: "10px 16px",
+                background: "#ffc439",
+                color: "#003087",
+                borderRadius: "20px",
                 fontSize: "13px",
-                fontWeight: "600",
+                fontWeight: "700",
                 cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0, 112, 186, 0.2)",
+                boxShadow: "0 0 14px rgba(255, 196, 57, 0.25)",
               }}
             >
-              <Icons.PayPal /> Join Pool & Authorize 10 units (${(p.negotiated_price * 10).toLocaleString()})
+              <Icons.PayPal /> Authorize 10 Units (${(p.negotiated * 10).toLocaleString()} USD)
             </button>
           </Card>
         ))}
@@ -1105,129 +1158,50 @@ function ActivePoolsCatalog({ onCheckoutPool }) {
   );
 }
 
-// --- View 4: Predictive Buying ---
+// --- View 5: Predictive Buying ---
 
 function PredictiveBuying() {
-  const [predictions, setPredictions] = useState([
-    { id: 1, buyer: "AquaFlow Industries", product: "Industrial Centrifugal Water Pump 5HP", qty: 12, date: "2026-12-15", confidence: "High", reason: "Recurring 5–6 month municipal cycle verified from historical invoices", status: "Open" },
-    { id: 2, buyer: "GreenPump Solutions", product: "Industrial Centrifugal Water Pump 5HP", qty: 15, date: "2026-12-20", confidence: "Medium", reason: "Seasonal agricultural flush + growth trend model", status: "Open" },
-    { id: 3, buyer: "HydroTech Systems", product: "Industrial Centrifugal Water Pump 5HP", qty: 23, date: "2026-12-10", confidence: "High", reason: "Annual Q4 civil infrastructure procurement schedule", status: "Open" },
-  ]);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/api/v1/demo/predictions`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.predictions) {
-          setPredictions(data.predictions.map((p, idx) => ({
-            id: idx + 1,
-            buyer: p.buyer || p.organization || `Buyer ${idx + 1}`,
-            product: p.product,
-            qty: p.predicted_quantity,
-            date: p.predicted_date,
-            confidence: p.confidence === "high" ? "High" : "Medium",
-            reason: p.explanation,
-            status: "Open"
-          })));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  function handleAction(id, action) {
-    setPredictions((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: action === "join" ? "Joined Pool" : "Dismissed" } : item
-      )
-    );
-  }
+  const predictions = [
+    { id: 1, buyer: "AquaFlow Industries", product: "Industrial Centrifugal Water Pump 5HP", qty: 12, date: "2026-12-15", confidence: "High", reason: "Recurring 5–6 month municipal cycle verified from historical invoices" },
+    { id: 2, buyer: "GreenPump Solutions", product: "Industrial Centrifugal Water Pump 5HP", qty: 15, date: "2026-12-20", confidence: "Medium", reason: "Seasonal agricultural flush + growth trend model" },
+    { id: 3, buyer: "HydroTech Systems", product: "Industrial Centrifugal Water Pump 5HP", qty: 23, date: "2026-12-10", confidence: "High", reason: "Annual Q4 civil infrastructure procurement schedule" },
+  ];
 
   return (
     <>
       <PageHeader
-        title="Predictive Buying"
+        title="Predictive Procurement Forecasting"
         description="Factual invoice pattern recognition separated from statistical forecasting models."
       />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         {predictions.map((p) => (
           <Card key={p.id}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
               <div>
-                <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>{p.product}</div>
-                <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px" }}>
-                  Procurement forecast for <strong style={{ color: "#111827" }}>{p.buyer}</strong> · Target delivery: {p.date}
+                <div style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc" }}>{p.product}</div>
+                <div style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px" }}>
+                  Procurement forecast for <strong style={{ color: "#00c3ff" }}>{p.buyer}</strong> · Target delivery: {p.date}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  padding: "3px 8px",
-                  borderRadius: "4px",
-                  background: p.confidence === "High" ? "#ecfdf5" : "#fffbeb",
-                  color: p.confidence === "High" ? "#059669" : "#d97706",
-                  border: `1px solid ${p.confidence === "High" ? "#a7f3d0" : "#fde68a"}`,
-                }}>
-                  {p.confidence} confidence
-                </span>
-                {p.status !== "Open" && (
-                  <span style={{
-                    fontSize: "11px",
-                    fontWeight: "600",
-                    padding: "3px 8px",
-                    borderRadius: "4px",
-                    background: p.status === "Joined Pool" ? "#eff6ff" : "#fef2f2",
-                    color: p.status === "Joined Pool" ? "#0070ba" : "#dc2626",
-                  }}>
-                    {p.status}
-                  </span>
-                )}
-              </div>
+              <span style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                padding: "3px 8px",
+                borderRadius: "4px",
+                background: "rgba(16, 185, 129, 0.15)",
+                color: "#10b981",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
+              }}>
+                {p.confidence} Confidence
+              </span>
             </div>
-
-            <div style={{ fontSize: "13px", color: "#4b5563", marginBottom: "14px", lineHeight: "1.5" }}>
+            <div style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "12px", lineHeight: "1.5" }}>
               {p.reason}
             </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
-              <div style={{ fontSize: "13px", color: "#6b7280" }}>
-                Forecasted volume: <strong style={{ color: "#111827" }}>{p.qty} units</strong>
-              </div>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  disabled={p.status !== "Open"}
-                  onClick={() => handleAction(p.id, "dismiss")}
-                  style={{
-                    padding: "6px 12px",
-                    background: "#ffffff",
-                    color: "#6b7280",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "6px",
-                    fontSize: "12.5px",
-                    cursor: p.status === "Open" ? "pointer" : "default",
-                    opacity: p.status === "Open" ? 1 : 0.5,
-                  }}
-                >
-                  Dismiss
-                </button>
-                <button
-                  disabled={p.status !== "Open"}
-                  onClick={() => handleAction(p.id, "join")}
-                  style={{
-                    padding: "6px 14px",
-                    background: "#0070ba",
-                    color: "#ffffff",
-                    borderRadius: "6px",
-                    fontSize: "12.5px",
-                    fontWeight: "600",
-                    cursor: p.status === "Open" ? "pointer" : "default",
-                    opacity: p.status === "Open" ? 1 : 0.5,
-                  }}
-                >
-                  {p.status === "Joined Pool" ? "Joined" : "Accept & Join Pool"}
-                </button>
-              </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", fontSize: "13px" }}>
+              <div>Forecasted Quantity: <strong style={{ color: "#f8fafc" }}>{p.qty} units</strong></div>
+              <span style={{ color: "#00c3ff", fontWeight: "600" }}>Automatically Clustered into Pool #PO-2026-08</span>
             </div>
           </Card>
         ))}
@@ -1236,7 +1210,7 @@ function PredictiveBuying() {
   );
 }
 
-// --- View 5: Demand Mesh ---
+// --- View 6: Demand Mesh ---
 
 function DemandMesh() {
   const members = [
@@ -1248,17 +1222,17 @@ function DemandMesh() {
   return (
     <>
       <PageHeader
-        title="Demand Mesh"
+        title="Demand Mesh Compatibility"
         description="Physical engineering tolerance matching across independent enterprise buyers."
       />
 
-      <Card>
+      <Card glow>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
           <div>
-            <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827" }}>Specification Match: Centrifugal 5HP</div>
-            <div style={{ fontSize: "12.5px", color: "#6b7280", marginTop: "2px" }}>Cluster Reference: #MESH-5HP-IP55</div>
+            <div style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>Specification Match: Centrifugal 5HP</div>
+            <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>Cluster Reference: #MESH-5HP-IP55</div>
           </div>
-          <span style={{ fontSize: "12px", fontWeight: "600", color: "#059669", background: "#ecfdf5", padding: "4px 10px", borderRadius: "6px", border: "1px solid #a7f3d0" }}>
+          <span style={{ fontSize: "12px", fontWeight: "700", color: "#10b981", background: "rgba(16, 185, 129, 0.15)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
             100% Technical Match
           </span>
         </div>
@@ -1266,18 +1240,18 @@ function DemandMesh() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "18px" }}>
           {members.map((m) => (
             <div key={m.name} style={{
-              background: "#f8fafc",
-              border: "1px solid #e2e8f0",
+              background: "#080d18",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
               borderRadius: "8px",
               padding: "16px",
             }}>
-              <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "500" }}>{m.sector}</div>
-              <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", margin: "4px 0 10px" }}>{m.name}</div>
+              <div style={{ fontSize: "11px", color: "#64748b" }}>{m.sector}</div>
+              <div style={{ fontSize: "14px", fontWeight: "700", color: "#f8fafc", margin: "4px 0 10px" }}>{m.name}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <span style={{ fontSize: "22px", fontWeight: "700", color: "#0070ba" }}>
-                  {m.qty} <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "400" }}>units</span>
+                <span style={{ fontSize: "22px", fontWeight: "800", color: "#00c3ff" }}>
+                  {m.qty} <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "400" }}>units</span>
                 </span>
-                <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>{m.share}</span>
+                <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>{m.share}</span>
               </div>
             </div>
           ))}
@@ -1288,13 +1262,13 @@ function DemandMesh() {
           justifyContent: "space-between",
           alignItems: "center",
           paddingTop: "14px",
-          borderTop: "1px solid #e5e7eb",
+          borderTop: "1px solid rgba(255, 255, 255, 0.08)",
           fontSize: "13px",
         }}>
           <div>
-            <strong style={{ color: "#111827" }}>50 units combined</strong> · Unlocks Tier-1 Supplier Price Tier ($365/unit)
+            <strong style={{ color: "#f8fafc" }}>50 units combined</strong> · Unlocks Tier-1 Supplier Price Tier ($365/unit)
           </div>
-          <div style={{ color: "#6b7280", fontFamily: "monospace", fontSize: "12px" }}>
+          <div style={{ color: "#94a3b8", fontFamily: "monospace", fontSize: "12px" }}>
             Flow 50 m³/h · Head 30m · IP55 · 400V
           </div>
         </div>
@@ -1303,91 +1277,61 @@ function DemandMesh() {
   );
 }
 
-// --- View 6: Negotiation Room ---
+// --- View 7: Negotiation Room ---
 
 function NegotiationRoom() {
-  const [messages, setMessages] = useState([
+  const messages = [
     { from: "AI Coordinator", text: "Opened collective RFP for 50-unit volume commitment across 3 verified organizations. Requested tier-1 rate: $350/unit.", type: "agent" },
     { from: "Industrial Supplier", text: "Counter-offered $365.00/unit (12.05% discount vs standard $415 retail) with 30-day price lock and warranty inclusion.", type: "simulated" },
     { from: "System Recommendation", text: "Lock in $365.00/unit. Delivers $2,250 net direct savings across the cluster. Accept counter-offer.", type: "recommendation" },
-  ]);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/api/v1/demo/negotiation`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.messages) {
-          setMessages(data.messages);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  ];
 
   return (
     <>
       <PageHeader
-        title="Negotiation Room"
-        description="Autonomous volume negotiation transcript and verified supplier counter-offers."
+        title="Autonomous Volume Negotiation Transcript"
+        description="Automated counter-offers and multi-turn volume commitments."
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "20px" }}>
         <Stat label="Retail Baseline" value="$415" sub="Standard single-buyer pricing" />
-        <Stat label="Negotiated Offer" value="$365" sub="Locked for 50 units" delta />
+        <Stat label="Negotiated Offer" value="$365" sub="Locked for 50 units" delta glowColor="#10b981" />
         <Stat label="Target Price" value="$350" sub="Initial RFP threshold" />
       </div>
 
-      <Card>
-        <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", marginBottom: "14px" }}>
-          Negotiation Transcript
+      <Card glow>
+        <div style={{ fontSize: "14px", fontWeight: "700", color: "#f8fafc", marginBottom: "14px" }}>
+          Verified Negotiation Log
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {messages.map((m, idx) => {
-            const isAgent = m.type === "agent" || m.from?.includes("AI");
-            const isRec = m.type === "recommendation" || m.from?.includes("Recommendation");
-            const badgeBg = isAgent ? "#eff6ff" : isRec ? "#ecfdf5" : "#fffbeb";
-            const badgeColor = isAgent ? "#0070ba" : isRec ? "#059669" : "#d97706";
-            return (
-              <div key={idx} style={{
-                background: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-                padding: "14px 16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    background: badgeBg,
-                    color: badgeColor,
-                  }}>
-                    {m.from}
-                  </span>
-                </div>
-                <div style={{ fontSize: "13.5px", color: "#374151", lineHeight: "1.5" }}>
-                  {m.text}
-                </div>
-              </div>
-            );
-          })}
+          {messages.map((m, idx) => (
+            <div key={idx} style={{
+              background: "#080d18",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+              borderRadius: "8px",
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
+            }}>
+              <span style={{ fontSize: "11px", fontWeight: "700", color: "#00c3ff" }}>{m.from}</span>
+              <div style={{ fontSize: "13.5px", color: "#f8fafc", lineHeight: "1.5" }}>{m.text}</div>
+            </div>
+          ))}
         </div>
       </Card>
     </>
   );
 }
 
-// --- View 7: Full PayPal Gateway Settlement & Checkout ---
+// --- View 8: PayPal Orders v2 Settlement ---
 
-function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselectedPool }) {
+function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselectedCheckout }) {
   const [loginEmail, setLoginEmail] = useState("");
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [orderState, setOrderState] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("paypal_wallet");
+  const [selectedRail, setSelectedRail] = useState("paypal_escrow");
 
   const demoAccounts = [
     { email: "aquaflow@example.com", name: "AquaFlow Industries", qty: 12, amount: 4380 },
@@ -1401,22 +1345,21 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
     { id: 3, name: "HydroTech Systems", email: "hydrotech@example.com", qty: 23, amount: 8395, status: "Authorized" },
   ];
 
-  // If a pool was passed from another view
   useEffect(() => {
-    if (preselectedPool) {
+    if (preselectedCheckout) {
       const customBuyer = {
-        id: 1,
+        id: preselectedCheckout.id || 1,
         name: orgName || "AquaFlow Industries",
         email: "aquaflow@example.com",
-        qty: preselectedPool.qty,
-        amount: preselectedPool.amount,
+        qty: preselectedCheckout.qty,
+        amount: preselectedCheckout.amount,
         status: "Pending",
-        description: preselectedPool.name,
+        description: preselectedCheckout.name,
       };
       setSelectedBuyer(customBuyer);
       initializePayPalOrder(customBuyer);
     }
-  }, [preselectedPool]);
+  }, [preselectedCheckout]);
 
   async function handleLogin(e, directEmail = null) {
     if (e) e.preventDefault();
@@ -1458,7 +1401,7 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
           amount: buyer.amount,
           currency: "USD",
           buyer_name: buyer.name,
-          description: buyer.description || `MINT Industrial Collective Purchase - ${buyer.qty}x Centrifugal Pump 5HP`,
+          description: buyer.description || `MINT Collective Procurement - ${buyer.qty}x Centrifugal Pump 5HP`,
         }),
       });
       const data = await res.json();
@@ -1472,16 +1415,17 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
   return (
     <>
       <PageHeader
-        title="PayPal Gateway Approvals & Settlement"
-        description="Independent bilateral buyer authorization via PayPal Orders v2. Zero pooled funds."
+        title="PayPal Gateway Approvals & Escrow Settlement"
+        description="Independent bilateral buyer authorization via PayPal Orders v2 with cryptographic webhooks."
+        badge="Zero Commingling"
       />
 
       {/* Enterprise Sign-In Card */}
       {!token ? (
-        <Card style={{ maxWidth: "480px", marginBottom: "24px" }}>
+        <Card glow style={{ maxWidth: "480px", marginBottom: "24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
-            <span style={{ color: "#0070ba" }}><Icons.PayPal /></span>
-            <span style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Enterprise Buyer Sign In</span>
+            <span style={{ color: "#00c3ff" }}><Icons.PayPal /></span>
+            <span style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc" }}>Enterprise Buyer Sign In</span>
           </div>
           <form onSubmit={handleLogin}>
             <input
@@ -1493,9 +1437,9 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
                 width: "100%",
                 padding: "10px 12px",
                 borderRadius: "6px",
-                border: "1px solid #d1d5db",
-                background: "#ffffff",
-                color: "#111827",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                background: "#080d18",
+                color: "#f8fafc",
                 fontSize: "13.5px",
                 marginBottom: "12px",
                 outline: "none",
@@ -1511,16 +1455,17 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
                 color: "#ffffff",
                 borderRadius: "6px",
                 fontSize: "13.5px",
-                fontWeight: "600",
+                fontWeight: "700",
                 cursor: "pointer",
+                boxShadow: "0 0 14px rgba(0, 112, 186, 0.3)",
               }}
             >
               {loading ? "Authenticating…" : "Sign In to Authorize"}
             </button>
           </form>
 
-          <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid #e5e7eb" }}>
-            <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", fontWeight: "600", textTransform: "uppercase" }}>
+          <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+            <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "8px", fontWeight: "700", textTransform: "uppercase" }}>
               Quick switch demo account:
             </div>
             <div style={{ display: "flex", gap: "6px" }}>
@@ -1533,13 +1478,13 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
                   }}
                   style={{
                     padding: "5px 10px",
-                    background: "#f1f5f9",
-                    color: "#374151",
-                    border: "1px solid #cbd5e1",
+                    background: "#142036",
+                    color: "#94a3b8",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
                     borderRadius: "4px",
                     fontSize: "11px",
                     cursor: "pointer",
-                    fontWeight: "500",
+                    fontWeight: "600",
                   }}
                 >
                   {acc.name.split(" ")[0]}
@@ -1554,25 +1499,26 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
           justifyContent: "space-between",
           alignItems: "center",
           padding: "12px 18px",
-          background: "#ecfdf5",
-          border: "1px solid #a7f3d0",
+          background: "rgba(16, 185, 129, 0.12)",
+          border: "1px solid rgba(16, 185, 129, 0.35)",
           borderRadius: "8px",
           marginBottom: "24px",
+          boxShadow: "0 0 12px rgba(16, 185, 129, 0.15)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ color: "#059669" }}><Icons.Check /></span>
-            <span style={{ fontSize: "13.5px", color: "#065f46" }}>
-              Authenticated Enterprise: <strong style={{ color: "#047857" }}>{orgName}</strong>
+            <span style={{ color: "#10b981" }}><Icons.Check /></span>
+            <span style={{ fontSize: "13.5px", color: "#f8fafc" }}>
+              Authenticated Enterprise: <strong style={{ color: "#10b981" }}>{orgName}</strong>
             </span>
           </div>
           <button
             onClick={onLogout}
             style={{
               fontSize: "12px",
-              color: "#dc2626",
+              color: "#ef4444",
               background: "transparent",
               cursor: "pointer",
-              fontWeight: "600",
+              fontWeight: "700",
             }}
           >
             Switch Account
@@ -1582,37 +1528,36 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
 
       {/* Buyer Commitment List */}
       <div style={{ marginBottom: "28px" }}>
-        <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", marginBottom: "12px" }}>
-          Pool Participants & Order Statuses
+        <div style={{ fontSize: "14px", fontWeight: "700", color: "#f8fafc", marginBottom: "12px" }}>
+          Pool Participant Orders & Authorizations
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {buyers.map((b) => (
             <div key={b.name} style={{
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
+              background: "#0c1322",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
               borderRadius: "8px",
               padding: "14px 18px",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}>
               <div>
-                <div style={{ fontSize: "14.5px", fontWeight: "600", color: "#111827" }}>{b.name}</div>
-                <div style={{ fontSize: "12.5px", color: "#6b7280", marginTop: "2px" }}>
-                  {b.qty} units × $365.00 = <strong style={{ color: "#111827" }}>${b.amount.toLocaleString()} USD</strong>
+                <div style={{ fontSize: "14.5px", fontWeight: "700", color: "#f8fafc" }}>{b.name}</div>
+                <div style={{ fontSize: "12.5px", color: "#94a3b8", marginTop: "2px" }}>
+                  {b.qty} units × $365.00 = <strong style={{ color: "#00c3ff" }}>${b.amount.toLocaleString()} USD</strong>
                 </div>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{
                   fontSize: "12px",
-                  fontWeight: "600",
+                  fontWeight: "700",
                   padding: "4px 10px",
                   borderRadius: "4px",
-                  background: b.status === "Authorized" ? "#ecfdf5" : "#fffbeb",
-                  color: b.status === "Authorized" ? "#059669" : "#d97706",
-                  border: `1px solid ${b.status === "Authorized" ? "#a7f3d0" : "#fde68a"}`,
+                  background: b.status === "Authorized" ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                  color: b.status === "Authorized" ? "#10b981" : "#f59e0b",
+                  border: `1px solid ${b.status === "Authorized" ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)"}`,
                 }}>
                   {b.status}
                 </span>
@@ -1629,9 +1574,9 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
                       color: "#ffffff",
                       borderRadius: "6px",
                       fontSize: "12.5px",
-                      fontWeight: "600",
+                      fontWeight: "700",
                       cursor: "pointer",
-                      boxShadow: "0 1px 2px rgba(0, 112, 186, 0.2)",
+                      boxShadow: "0 0 10px rgba(0, 112, 186, 0.3)",
                     }}
                   >
                     Authorize Order
@@ -1645,58 +1590,51 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
 
       {/* --- REAL PAYPAL CHECKOUT CARD --- */}
       {selectedBuyer && orderState && (
-        <div style={{
-          background: "#ffffff",
-          border: "2px solid #0070ba",
-          borderRadius: "10px",
-          padding: "24px",
-          marginTop: "16px",
-          boxShadow: "0 8px 24px rgba(0, 112, 186, 0.08)",
-        }}>
+        <Card glow style={{ border: "2px solid #0070ba", marginTop: "16px" }}>
           {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", paddingBottom: "14px", borderBottom: "1px solid #e5e7eb" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", paddingBottom: "14px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Icons.PayPal />
               <div>
-                <div style={{ fontSize: "16px", fontWeight: "700", color: "#003087" }}>
+                <div style={{ fontSize: "16px", fontWeight: "800", color: "#f8fafc" }}>
                   PayPal Checkout · Orders v2
                 </div>
-                <div style={{ fontSize: "11.5px", color: "#6b7280" }}>
+                <div style={{ fontSize: "11.5px", color: "#00c3ff" }}>
                   Individual Bilateral Escrow Authorization
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: "right", fontFamily: "monospace", fontSize: "12px", color: "#6b7280" }}>
+            <div style={{ textAlign: "right", fontFamily: "monospace", fontSize: "12px", color: "#94a3b8" }}>
               {orderState.mint_order_id}
             </div>
           </div>
 
           {/* Payment Method Selector */}
           <div style={{ marginBottom: "16px" }}>
-            <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600", marginBottom: "8px" }}>
-              Select PayPal Commercial Service:
+            <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600", marginBottom: "8px" }}>
+              Select PayPal Payment Rail:
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
               {[
-                { id: "paypal_wallet", label: "PayPal Wallet", note: "Instant Escrow Hold" },
-                { id: "pay_later", label: "PayPal Net 30", note: "Commercial Financing" },
+                { id: "paypal_escrow", label: "PayPal Wallet", note: "Instant Escrow Hold" },
+                { id: "paypal_working_capital", label: "Working Capital", note: "Net 30 Financing" },
                 { id: "debit_card", label: "Business Card", note: "Debit or Credit" },
               ].map((m) => (
                 <button
                   key={m.id}
-                  onClick={() => setPaymentMethod(m.id)}
+                  onClick={() => setSelectedRail(m.id)}
                   style={{
                     padding: "10px",
                     borderRadius: "6px",
-                    background: paymentMethod === m.id ? "#f0f7fd" : "#ffffff",
-                    border: `1.5px solid ${paymentMethod === m.id ? "#0070ba" : "#e2e8f0"}`,
-                    color: paymentMethod === m.id ? "#003087" : "#4b5563",
+                    background: selectedRail === m.id ? "rgba(0, 112, 186, 0.25)" : "#080d18",
+                    border: `1.5px solid ${selectedRail === m.id ? "#00c3ff" : "rgba(255, 255, 255, 0.08)"}`,
+                    color: selectedRail === m.id ? "#ffffff" : "#94a3b8",
                     textAlign: "center",
                     cursor: "pointer",
                   }}
                 >
-                  <div style={{ fontSize: "12.5px", fontWeight: "600" }}>{m.label}</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{m.note}</div>
+                  <div style={{ fontSize: "12.5px", fontWeight: "700" }}>{m.label}</div>
+                  <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>{m.note}</div>
                 </button>
               ))}
             </div>
@@ -1704,22 +1642,22 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
 
           {/* Line Item Invoice Breakdown */}
           <div style={{
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
+            background: "#080d18",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
             borderRadius: "8px",
             padding: "16px",
             marginBottom: "20px",
             fontSize: "13.5px",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-              <span style={{ color: "#4b5563" }}>Item: {selectedBuyer.description || "Industrial Centrifugal Pump 5HP"}</span>
-              <span style={{ color: "#111827", fontWeight: "600" }}>{selectedBuyer.qty} units × $365.00</span>
+              <span style={{ color: "#94a3b8" }}>Item: {selectedBuyer.description || "Industrial Centrifugal Pump 5HP"}</span>
+              <span style={{ color: "#f8fafc", fontWeight: "700" }}>{selectedBuyer.qty} units × $365.00</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "#6b7280" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "#64748b" }}>
               <span>Retail Baseline Price:</span>
               <span style={{ textDecoration: "line-through" }}>${(selectedBuyer.qty * 415).toLocaleString()} USD</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", color: "#059669", fontWeight: "500" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", color: "#10b981", fontWeight: "600" }}>
               <span>MINT Volume Discount:</span>
               <span>-${(selectedBuyer.qty * (415 - 365)).toLocaleString()} USD</span>
             </div>
@@ -1727,12 +1665,12 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
               display: "flex",
               justifyContent: "space-between",
               paddingTop: "12px",
-              borderTop: "1px solid #cbd5e1",
+              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
               fontSize: "16px",
-              fontWeight: "700",
+              fontWeight: "800",
             }}>
-              <span style={{ color: "#111827" }}>Total Escrow Commitment:</span>
-              <span style={{ color: "#0070ba" }}>${orderState.amount?.toLocaleString()} USD</span>
+              <span style={{ color: "#f8fafc" }}>Total Escrow Commitment:</span>
+              <span style={{ color: "#00c3ff" }}>${orderState.amount?.toLocaleString()} USD</span>
             </div>
           </div>
 
@@ -1753,20 +1691,20 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
                   color: "#003087",
                   borderRadius: "24px",
                   fontSize: "14.5px",
-                  fontWeight: "700",
+                  fontWeight: "800",
                   textDecoration: "none",
                   cursor: "pointer",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)",
+                  boxShadow: "0 0 16px rgba(255, 196, 57, 0.3)",
                 }}
               >
-                <Icons.PayPal /> {paymentMethod === "pay_later" ? "Pay Later with PayPal" : "Pay with PayPal"}
+                <Icons.PayPal /> {selectedRail === "paypal_working_capital" ? "Pay Later with PayPal" : "Pay with PayPal"}
               </a>
             ) : (
               <button
                 disabled
                 style={{
                   padding: "12px",
-                  background: "#e2e8f0",
+                  background: "#142036",
                   color: "#64748b",
                   borderRadius: "24px",
                   fontSize: "14px",
@@ -1789,22 +1727,23 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
                 justifyContent: "center",
                 gap: "8px",
                 padding: "11px 20px",
-                background: "#2c2e2f",
-                color: "#ffffff",
+                background: "#142036",
+                color: "#f8fafc",
                 borderRadius: "24px",
                 fontSize: "14px",
                 fontWeight: "600",
                 cursor: "pointer",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
               }}
             >
               Debit or Credit Card
             </button>
           </div>
 
-          <div style={{ textAlign: "center", marginTop: "14px", fontSize: "11.5px", color: "#6b7280" }}>
-            Secured by PayPal Sandbox Orders v2 · Funds captured only upon verified collective pool finalization
+          <div style={{ textAlign: "center", marginTop: "14px", fontSize: "11.5px", color: "#64748b" }}>
+            Secured by PayPal Sandbox Orders v2 · 180-Day Enterprise Buyer Protection Active
           </div>
-        </div>
+        </Card>
       )}
     </>
   );
