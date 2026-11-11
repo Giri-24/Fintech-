@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// --- Icons (16x16, 1.5 stroke, text-role colored) ---
+// --- Icons (16x16, 1.7 stroke, line icons) ---
 const Icons = {
   Command: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1.5" />
       <rect x="14" y="3" width="7" height="7" rx="1.5" />
       <rect x="14" y="14" width="7" height="7" rx="1.5" />
@@ -15,20 +15,20 @@ const Icons = {
     </svg>
   ),
   Predictive: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 3v18h18" />
       <path d="m7 15 4-4 4 4 6-7" />
     </svg>
   ),
   Mesh: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="12 2 2 7 12 12 22 7 12 2" />
       <polyline points="2 17 12 22 22 17" />
       <polyline points="2 12 12 17 22 12" />
     </svg>
   ),
   Negotiation: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="m16 3 4 4-4 4" />
       <path d="M20 7H4" />
       <path d="m8 21-4-4 4-4" />
@@ -36,7 +36,7 @@ const Icons = {
     </svg>
   ),
   Approvals: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="5" width="20" height="14" rx="2" />
       <line x1="2" y1="10" x2="22" y2="10" />
     </svg>
@@ -44,7 +44,7 @@ const Icons = {
   PayPal: () => (
     <svg width="18" height="20" viewBox="0 0 24 28" fill="none">
       <path d="M4.5 24.5L7.2 4.2h7.8c3.2 0 5.4.7 6.3 2.1.9 1.4.9 3.2.1 5.3-.9 2.5-2.7 4.2-5.3 5.2-1.2.5-2.7.7-4.6.7H8.8L6.9 24.5H4.5z" fill="#003087" />
-      <path d="M8.8 17.5h2.7c3.2 0 5.4-.7 6.3-2.1.9-1.4.9-3.2.1-5.3-.9-2.5-2.7-4.2-5.3-5.2-1.2-.5-2.7-.7-4.6-.7H3.5L.8 24.5h3.8l2.2-7z" fill="#0079C1" opacity="0.9" />
+      <path d="M8.8 17.5h2.7c3.2 0 5.4-.7 6.3-2.1.9-1.4.9-3.2.1-5.3-.9-2.5-2.7-4.2-5.3-5.2-1.2-.5-2.7-.7-4.6-.7H3.5L.8 24.5h3.8l2.2-7z" fill="#0079C1" opacity="0.95" />
     </svg>
   ),
   Check: () => (
@@ -53,13 +53,13 @@ const Icons = {
     </svg>
   ),
   Lock: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   ),
   Shield: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   ),
@@ -93,37 +93,40 @@ export default function Home() {
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#090d16", color: "#f8fafc" }}>
-      {/* Sidebar */}
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", color: "#111827" }}>
+      {/* Sidebar - White Modern PayPal Style */}
       <aside style={{
         width: "256px",
-        background: "#060910",
-        borderRight: "1px solid rgba(255, 255, 255, 0.08)",
+        background: "#ffffff",
+        borderRight: "1px solid #e5e7eb",
         padding: "24px 16px",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
       }}>
         {/* Brand */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "28px", padding: "0 6px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px", padding: "0 6px" }}>
           <div style={{
-            width: "32px",
-            height: "32px",
+            width: "34px",
+            height: "34px",
             borderRadius: "8px",
-            background: "#151f33",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
+            background: "#003087",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "14px",
-            fontWeight: "600",
-            color: "#f8fafc",
+            fontSize: "15px",
+            fontWeight: "700",
+            color: "#ffffff",
           }}>
             M
           </div>
           <div>
-            <div style={{ fontSize: "15px", fontWeight: "600", letterSpacing: "-0.01em" }}>MINT</div>
-            <div style={{ fontSize: "12px", color: "#64748b" }}>Industrial Procurement</div>
+            <div style={{ fontSize: "16px", fontWeight: "700", letterSpacing: "-0.01em", color: "#003087" }}>
+              MINT
+            </div>
+            <div style={{ fontSize: "11.5px", color: "#6b7280" }}>
+              PayPal Procurement
+            </div>
           </div>
         </div>
 
@@ -134,25 +137,25 @@ export default function Home() {
           gap: "8px",
           padding: "8px 12px",
           borderRadius: "6px",
-          background: "#0c111c",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
-          marginBottom: "24px",
+          background: backendOnline ? "#ecfdf5" : "#fffbeb",
+          border: `1px solid ${backendOnline ? "#a7f3d0" : "#fde68a"}`,
+          marginBottom: "20px",
           fontSize: "12px",
         }}>
           <span style={{
             width: "6px",
             height: "6px",
             borderRadius: "50%",
-            backgroundColor: backendOnline ? "#10b981" : "#f59e0b",
+            backgroundColor: backendOnline ? "#059669" : "#d97706",
           }} />
-          <span style={{ color: "#94a3b8" }}>
-            {backendOnline ? "API connected" : "Mock demo mode"}
+          <span style={{ color: backendOnline ? "#065f46" : "#92400e", fontWeight: "500" }}>
+            {backendOnline ? "PayPal API Connected" : "Sandbox Mock Mode"}
           </span>
         </div>
 
         {/* Navigation */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
-          <div style={{ fontSize: "11px", color: "#475569", padding: "4px 8px", letterSpacing: "0.02em" }}>
+          <div style={{ fontSize: "11px", color: "#9ca3af", padding: "4px 8px", textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: "600" }}>
             Navigation
           </div>
           {navItems.map(({ key, label, icon: IconComponent }) => {
@@ -167,18 +170,18 @@ export default function Home() {
                   gap: "10px",
                   width: "100%",
                   textAlign: "left",
-                  padding: "8px 12px",
+                  padding: "9px 12px",
                   borderRadius: "6px",
-                  background: isActive ? "#151f33" : "transparent",
-                  color: isActive ? "#f8fafc" : "#94a3b8",
-                  border: isActive ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid transparent",
+                  background: isActive ? "#f0f7fd" : "transparent",
+                  color: isActive ? "#0070ba" : "#4b5563",
+                  borderLeft: isActive ? "3px solid #0070ba" : "3px solid transparent",
                   cursor: "pointer",
-                  fontSize: "13px",
-                  fontWeight: isActive ? "500" : "400",
+                  fontSize: "13.5px",
+                  fontWeight: isActive ? "600" : "500",
                   transition: "background 0.12s ease, color 0.12s ease",
                 }}
               >
-                <span style={{ color: isActive ? "#38bdf8" : "#64748b", display: "flex", alignItems: "center" }}>
+                <span style={{ color: isActive ? "#0070ba" : "#9ca3af", display: "flex", alignItems: "center" }}>
                   <IconComponent />
                 </span>
                 {label}
@@ -187,26 +190,27 @@ export default function Home() {
           })}
         </nav>
 
-        {/* User / Org Session info in sidebar */}
+        {/* User / Session box */}
         <div style={{
-          padding: "12px",
-          borderRadius: "6px",
-          background: "#0e1524",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          padding: "12px 14px",
+          borderRadius: "8px",
+          background: "#f8fafc",
+          border: "1px solid #e2e8f0",
           fontSize: "12px",
         }}>
           {token ? (
             <div>
-              <div style={{ color: "#64748b", fontSize: "11px" }}>Organization</div>
-              <div style={{ color: "#f8fafc", fontWeight: "500", marginTop: "2px" }}>{orgName}</div>
+              <div style={{ color: "#6b7280", fontSize: "11px" }}>Logged in buyer:</div>
+              <div style={{ color: "#111827", fontWeight: "600", marginTop: "2px" }}>{orgName}</div>
               <button
                 onClick={handleLogout}
                 style={{
                   marginTop: "8px",
                   fontSize: "11.5px",
-                  color: "#ef4444",
+                  color: "#dc2626",
                   background: "transparent",
                   cursor: "pointer",
+                  fontWeight: "500",
                   padding: 0,
                 }}
               >
@@ -214,15 +218,15 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            <div style={{ color: "#64748b" }}>
-              Demo scenario · Water pumps
+            <div style={{ color: "#6b7280" }}>
+              Industrial procurement scenario
             </div>
           )}
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main style={{ flex: 1, padding: "36px 44px", overflowY: "auto", maxWidth: "1120px" }}>
+      {/* Main Content Area */}
+      <main style={{ flex: 1, padding: "36px 48px", overflowY: "auto", maxWidth: "1140px" }}>
         {active === "command" && <CommandCentre onNavigate={setActive} />}
         {active === "predictive" && <PredictiveBuying />}
         {active === "mesh" && <DemandMesh />}
@@ -237,23 +241,26 @@ export default function Home() {
           />
         )}
 
-        {/* Regulatory footer */}
+        {/* Regulatory Footer - White & PayPal Blue */}
         <footer style={{
           marginTop: "48px",
           padding: "16px 20px",
           borderRadius: "8px",
-          background: "#0e1524",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
           fontSize: "12px",
-          color: "#64748b",
+          color: "#6b7280",
           lineHeight: "1.6",
           display: "flex",
           alignItems: "center",
-          gap: "10px",
+          gap: "12px",
         }}>
-          <span style={{ color: "#0070ba", display: "flex", alignItems: "center" }}><Icons.Shield /></span>
+          <span style={{ color: "#0070ba", display: "flex", alignItems: "center" }}>
+            <Icons.Shield />
+          </span>
           <div>
-            Regulatory Architecture: MINT operates as an automated procurement coordinator. Individual buyers authorize independent server-to-server holds via PayPal Orders v2 with cryptographic webhook signatures. No commingled balances or custodial holding.
+            <strong style={{ color: "#111827" }}>PayPal Settlement Architecture:</strong> MINT functions as an autonomous procurement coordinator. Each buyer enterprise maintains independent funds authority and captures their exact order share directly through <strong>PayPal Orders v2</strong> with cryptographic webhook verification. No shared accounts or commingled balances exist.
           </div>
         </footer>
       </main>
@@ -261,15 +268,15 @@ export default function Home() {
   );
 }
 
-// --- Standard UI Components ---
+// --- Reusable Modern Light Components ---
 
 function PageHeader({ title, description }) {
   return (
-    <div style={{ marginBottom: "28px" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: "600", letterSpacing: "-0.02em", margin: "0 0 4px" }}>
+    <div style={{ marginBottom: "24px" }}>
+      <h1 style={{ fontSize: "24px", fontWeight: "700", letterSpacing: "-0.02em", color: "#111827", margin: "0 0 4px" }}>
         {title}
       </h1>
-      <p style={{ color: "#94a3b8", fontSize: "14px", margin: 0 }}>
+      <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>
         {description}
       </p>
     </div>
@@ -279,10 +286,11 @@ function PageHeader({ title, description }) {
 function Card({ children, style = {} }) {
   return (
     <div style={{
-      background: "#0e1524",
-      border: "1px solid rgba(255, 255, 255, 0.08)",
+      background: "#ffffff",
+      border: "1px solid #e5e7eb",
       borderRadius: "10px",
       padding: "20px 24px",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)",
       ...style,
     }}>
       {children}
@@ -293,16 +301,17 @@ function Card({ children, style = {} }) {
 function Stat({ label, value, sub, delta }) {
   return (
     <div style={{
-      background: "#0e1524",
-      border: "1px solid rgba(255, 255, 255, 0.08)",
+      background: "#ffffff",
+      border: "1px solid #e5e7eb",
       borderRadius: "10px",
       padding: "18px 20px",
+      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
     }}>
-      <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>{label}</div>
-      <div style={{ fontSize: "26px", fontWeight: "600", color: "#f8fafc", letterSpacing: "-0.02em" }} className="tabular-nums">
+      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "6px", fontWeight: "500" }}>{label}</div>
+      <div style={{ fontSize: "26px", fontWeight: "700", color: "#111827", letterSpacing: "-0.02em" }} className="tabular-nums">
         {value}
       </div>
-      <div style={{ fontSize: "12px", color: delta ? "#10b981" : "#64748b", marginTop: "4px" }}>
+      <div style={{ fontSize: "12px", color: delta ? "#059669" : "#6b7280", marginTop: "4px", fontWeight: delta ? "600" : "400" }}>
         {sub}
       </div>
     </div>
@@ -319,7 +328,7 @@ function CommandCentre({ onNavigate }) {
     pending_approvals: 2,
     combined_qty: 50,
     price: "$365 / unit",
-    status: "Awaiting buyer authorizations",
+    status: "Awaiting Buyer Authorizations",
   });
 
   useEffect(() => {
@@ -334,7 +343,7 @@ function CommandCentre({ onNavigate }) {
             pending_approvals: res.pending_approvals,
             combined_qty: res.pool.pool_metrics?.combined_quantity || 50,
             price: `$${res.pool.pool_metrics?.negotiated_unit_price || 365} / unit`,
-            status: "Awaiting buyer authorizations",
+            status: "Awaiting Buyer Authorizations",
           });
         }
       })
@@ -345,34 +354,37 @@ function CommandCentre({ onNavigate }) {
     <>
       <PageHeader
         title="Command Centre"
-        description="Active demand aggregation across 3 regional municipal and agricultural contractors."
+        description="Active industrial demand aggregation across 3 regional municipal and agricultural enterprises."
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
         <Stat label="Predicted Purchases" value={data.predicted_purchases} sub="Next 60 days" />
-        <Stat label="Active Demand Pools" value={data.active_pools} sub={`${data.combined_qty} total units`} />
+        <Stat label="Active Demand Pools" value={data.active_pools} sub={`${data.combined_qty} combined units`} />
         <Stat label="Direct Savings" value={`$${data.estimated_savings.toLocaleString()}`} sub="vs $415 retail baseline" delta />
-        <Stat label="Pending Approvals" value={data.pending_approvals} sub="Awaiting buyer action" />
+        <Stat label="Pending Authorizations" value={data.pending_approvals} sub="Awaiting buyer capture" />
       </div>
 
       <Card>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
           <div>
-            <div style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "4px" }}>
-              Active Specification Pool #PO-2026-08
+            <div style={{ fontSize: "11.5px", color: "#0070ba", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "4px" }}>
+              Demand Pool #PO-2026-08
             </div>
-            <div style={{ fontSize: "17px", fontWeight: "600" }}>Industrial Centrifugal Water Pump 5HP</div>
-            <div style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px" }}>
+            <div style={{ fontSize: "17px", fontWeight: "700", color: "#111827" }}>
+              Industrial Centrifugal Water Pump 5HP
+            </div>
+            <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px" }}>
               Specifications: Flow 50 m³/h · Head 30 m · IP55 Weatherproof · 3-Phase 400V
             </div>
           </div>
           <span style={{
             fontSize: "12px",
+            fontWeight: "500",
             padding: "4px 10px",
             borderRadius: "6px",
-            background: "#151f33",
-            color: "#38bdf8",
-            border: "1px solid rgba(56, 189, 248, 0.2)",
+            background: "#eff6ff",
+            color: "#0070ba",
+            border: "1px solid #bfdbfe",
           }}>
             {data.status}
           </span>
@@ -383,22 +395,22 @@ function CommandCentre({ onNavigate }) {
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: "16px",
           padding: "16px",
-          background: "#090d16",
+          background: "#f8fafc",
           borderRadius: "8px",
-          border: "1px solid rgba(255, 255, 255, 0.05)",
+          border: "1px solid #e2e8f0",
           marginBottom: "18px",
         }}>
           <div>
-            <div style={{ color: "#64748b", fontSize: "12px" }}>Aggregated Volume</div>
-            <div style={{ fontSize: "18px", fontWeight: "600", marginTop: "4px" }}>{data.combined_qty} units</div>
+            <div style={{ color: "#6b7280", fontSize: "12px" }}>Aggregated Volume</div>
+            <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827", marginTop: "2px" }}>{data.combined_qty} units</div>
           </div>
           <div>
-            <div style={{ color: "#64748b", fontSize: "12px" }}>Negotiated Unit Price</div>
-            <div style={{ fontSize: "18px", fontWeight: "600", color: "#10b981", marginTop: "4px" }}>{data.price}</div>
+            <div style={{ color: "#6b7280", fontSize: "12px" }}>Negotiated Unit Price</div>
+            <div style={{ fontSize: "18px", fontWeight: "700", color: "#059669", marginTop: "2px" }}>{data.price}</div>
           </div>
           <div>
-            <div style={{ color: "#64748b", fontSize: "12px" }}>Direct Collective Savings</div>
-            <div style={{ fontSize: "18px", fontWeight: "600", color: "#10b981", marginTop: "4px" }}>$2,250 USD</div>
+            <div style={{ color: "#6b7280", fontSize: "12px" }}>Collective Cash Savings</div>
+            <div style={{ fontSize: "18px", fontWeight: "700", color: "#059669", marginTop: "2px" }}>$2,250 USD</div>
           </div>
         </div>
 
@@ -406,16 +418,17 @@ function CommandCentre({ onNavigate }) {
           <button
             onClick={() => onNavigate("approvals")}
             style={{
-              padding: "8px 16px",
+              padding: "9px 18px",
               background: "#0070ba",
               color: "#ffffff",
               borderRadius: "6px",
               fontSize: "13px",
-              fontWeight: "500",
+              fontWeight: "600",
               cursor: "pointer",
+              boxShadow: "0 1px 2px rgba(0, 112, 186, 0.2)",
             }}
           >
-            Review Approvals & Settlement →
+            Review Approvals & PayPal Checkout →
           </button>
         </div>
       </Card>
@@ -427,8 +440,8 @@ function CommandCentre({ onNavigate }) {
 
 function PredictiveBuying() {
   const [predictions, setPredictions] = useState([
-    { id: 1, buyer: "AquaFlow Industries", product: "Industrial Centrifugal Water Pump 5HP", qty: 12, date: "2026-12-15", confidence: "High", reason: "Recurring 5–6 month municipal cycle detected from invoices", status: "Open" },
-    { id: 2, buyer: "GreenPump Solutions", product: "Industrial Centrifugal Water Pump 5HP", qty: 15, date: "2026-12-20", confidence: "Medium", reason: "Seasonal agricultural flush + growth trend extrapolation", status: "Open" },
+    { id: 1, buyer: "AquaFlow Industries", product: "Industrial Centrifugal Water Pump 5HP", qty: 12, date: "2026-12-15", confidence: "High", reason: "Recurring 5–6 month municipal cycle verified from historical invoices", status: "Open" },
+    { id: 2, buyer: "GreenPump Solutions", product: "Industrial Centrifugal Water Pump 5HP", qty: 15, date: "2026-12-20", confidence: "Medium", reason: "Seasonal agricultural flush + growth trend model", status: "Open" },
     { id: 3, buyer: "HydroTech Systems", product: "Industrial Centrifugal Water Pump 5HP", qty: 23, date: "2026-12-10", confidence: "High", reason: "Annual Q4 civil infrastructure procurement schedule", status: "Open" },
   ]);
 
@@ -464,37 +477,39 @@ function PredictiveBuying() {
     <>
       <PageHeader
         title="Predictive Buying"
-        description="Historical invoice pattern forecasts. Real verified transactions separated from statistical predictions."
+        description="Factual invoice pattern recognition separated from statistical forecasting models."
       />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         {predictions.map((p) => (
           <Card key={p.id}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
               <div>
-                <div style={{ fontSize: "15px", fontWeight: "500" }}>{p.product}</div>
-                <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
-                  Forecast for <strong style={{ color: "#94a3b8" }}>{p.buyer}</strong> · Delivery window: {p.date}
+                <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>{p.product}</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px" }}>
+                  Procurement forecast for <strong style={{ color: "#111827" }}>{p.buyer}</strong> · Target delivery: {p.date}
                 </div>
               </div>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <span style={{
                   fontSize: "11px",
+                  fontWeight: "600",
                   padding: "3px 8px",
                   borderRadius: "4px",
-                  background: p.confidence === "High" ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
-                  color: p.confidence === "High" ? "#10b981" : "#f59e0b",
-                  border: `1px solid ${p.confidence === "High" ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)"}`,
+                  background: p.confidence === "High" ? "#ecfdf5" : "#fffbeb",
+                  color: p.confidence === "High" ? "#059669" : "#d97706",
+                  border: `1px solid ${p.confidence === "High" ? "#a7f3d0" : "#fde68a"}`,
                 }}>
                   {p.confidence} confidence
                 </span>
                 {p.status !== "Open" && (
                   <span style={{
                     fontSize: "11px",
+                    fontWeight: "600",
                     padding: "3px 8px",
                     borderRadius: "4px",
-                    background: p.status === "Joined Pool" ? "rgba(56, 189, 248, 0.15)" : "rgba(239, 68, 68, 0.15)",
-                    color: p.status === "Joined Pool" ? "#38bdf8" : "#ef4444",
+                    background: p.status === "Joined Pool" ? "#eff6ff" : "#fef2f2",
+                    color: p.status === "Joined Pool" ? "#0070ba" : "#dc2626",
                   }}>
                     {p.status}
                   </span>
@@ -502,13 +517,13 @@ function PredictiveBuying() {
               </div>
             </div>
 
-            <div style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "16px", lineHeight: "1.5" }}>
+            <div style={{ fontSize: "13px", color: "#4b5563", marginBottom: "14px", lineHeight: "1.5" }}>
               {p.reason}
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
-              <div style={{ fontSize: "13px" }}>
-                Predicted requirement: <strong style={{ color: "#f8fafc" }}>{p.qty} units</strong>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+              <div style={{ fontSize: "13px", color: "#6b7280" }}>
+                Forecasted volume: <strong style={{ color: "#111827" }}>{p.qty} units</strong>
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -516,10 +531,11 @@ function PredictiveBuying() {
                   onClick={() => handleAction(p.id, "dismiss")}
                   style={{
                     padding: "6px 12px",
-                    background: "#151f33",
-                    color: "#94a3b8",
+                    background: "#ffffff",
+                    color: "#6b7280",
+                    border: "1px solid #d1d5db",
                     borderRadius: "6px",
-                    fontSize: "12px",
+                    fontSize: "12.5px",
                     cursor: p.status === "Open" ? "pointer" : "default",
                     opacity: p.status === "Open" ? 1 : 0.5,
                   }}
@@ -534,8 +550,8 @@ function PredictiveBuying() {
                     background: "#0070ba",
                     color: "#ffffff",
                     borderRadius: "6px",
-                    fontSize: "12px",
-                    fontWeight: "500",
+                    fontSize: "12.5px",
+                    fontWeight: "600",
                     cursor: p.status === "Open" ? "pointer" : "default",
                     opacity: p.status === "Open" ? 1 : 0.5,
                   }}
@@ -564,33 +580,35 @@ function DemandMesh() {
     <>
       <PageHeader
         title="Demand Mesh"
-        description="Clustered SME requirements matched strictly on physical engineering tolerances."
+        description="Physical engineering tolerance matching across independent enterprise buyers."
       />
 
       <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
           <div>
-            <div style={{ fontSize: "16px", fontWeight: "600" }}>Specification Match: Centrifugal 5HP</div>
-            <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>Cluster ID: #MESH-5HP-IP55</div>
+            <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827" }}>Specification Match: Centrifugal 5HP</div>
+            <div style={{ fontSize: "12.5px", color: "#6b7280", marginTop: "2px" }}>Cluster Reference: #MESH-5HP-IP55</div>
           </div>
-          <span style={{ fontSize: "12px", color: "#10b981", background: "rgba(16, 185, 129, 0.12)", padding: "4px 10px", borderRadius: "6px" }}>
-            100% Specification Compatibility
+          <span style={{ fontSize: "12px", fontWeight: "600", color: "#059669", background: "#ecfdf5", padding: "4px 10px", borderRadius: "6px", border: "1px solid #a7f3d0" }}>
+            100% Technical Match
           </span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "18px" }}>
           {members.map((m) => (
             <div key={m.name} style={{
-              background: "#090d16",
-              border: "1px solid rgba(255, 255, 255, 0.06)",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
               borderRadius: "8px",
               padding: "16px",
             }}>
-              <div style={{ fontSize: "11px", color: "#64748b" }}>{m.sector}</div>
-              <div style={{ fontSize: "14px", fontWeight: "500", color: "#f8fafc", margin: "4px 0 12px" }}>{m.name}</div>
+              <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "500" }}>{m.sector}</div>
+              <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827", margin: "4px 0 10px" }}>{m.name}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <span style={{ fontSize: "22px", fontWeight: "600", color: "#38bdf8" }}>{m.qty} <span style={{ fontSize: "12px", color: "#64748b" }}>units</span></span>
-                <span style={{ fontSize: "12px", color: "#64748b" }}>{m.share}</span>
+                <span style={{ fontSize: "22px", fontWeight: "700", color: "#0070ba" }}>
+                  {m.qty} <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "400" }}>units</span>
+                </span>
+                <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>{m.share}</span>
               </div>
             </div>
           ))}
@@ -600,14 +618,14 @@ function DemandMesh() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          paddingTop: "16px",
-          borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+          paddingTop: "14px",
+          borderTop: "1px solid #e5e7eb",
           fontSize: "13px",
         }}>
           <div>
-            <strong>50 units combined</strong> · Unlocks Tier-1 Supplier Price Tier ($365/unit)
+            <strong style={{ color: "#111827" }}>50 units combined</strong> · Unlocks Tier-1 Supplier Price Tier ($365/unit)
           </div>
-          <div style={{ color: "#94a3b8", fontFamily: "monospace", fontSize: "12px" }}>
+          <div style={{ color: "#6b7280", fontFamily: "monospace", fontSize: "12px" }}>
             Flow 50 m³/h · Head 30m · IP55 · 400V
           </div>
         </div>
@@ -620,7 +638,7 @@ function DemandMesh() {
 
 function NegotiationRoom() {
   const [messages, setMessages] = useState([
-    { from: "AI Coordinator", text: "Opened collective RFP for 50-unit bulk commitment across 3 verified organizations. Requested tier-1 rate: $350/unit.", type: "agent" },
+    { from: "AI Coordinator", text: "Opened collective RFP for 50-unit volume commitment across 3 verified organizations. Requested tier-1 rate: $350/unit.", type: "agent" },
     { from: "Industrial Supplier", text: "Counter-offered $365.00/unit (12.05% discount vs standard $415 retail) with 30-day price lock and warranty inclusion.", type: "simulated" },
     { from: "System Recommendation", text: "Lock in $365.00/unit. Delivers $2,250 net direct savings across the cluster. Accept counter-offer.", type: "recommendation" },
   ]);
@@ -640,26 +658,29 @@ function NegotiationRoom() {
     <>
       <PageHeader
         title="Negotiation Room"
-        description="Autonomous volume negotiation transcript and supplier counter-offers."
+        description="Autonomous volume negotiation transcript and verified supplier counter-offers."
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "20px" }}>
         <Stat label="Retail Baseline" value="$415" sub="Standard single-buyer pricing" />
         <Stat label="Negotiated Offer" value="$365" sub="Locked for 50 units" delta />
-        <Stat label="Target Price" value="$350" sub="Initial aggressive RFP tier" />
+        <Stat label="Target Price" value="$350" sub="Initial RFP threshold" />
       </div>
 
       <Card>
-        <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "16px" }}>Negotiation Transcript</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", marginBottom: "14px" }}>
+          Negotiation Transcript
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {messages.map((m, idx) => {
             const isAgent = m.type === "agent" || m.from?.includes("AI");
             const isRec = m.type === "recommendation" || m.from?.includes("Recommendation");
-            const badgeColor = isAgent ? "#38bdf8" : isRec ? "#10b981" : "#f59e0b";
+            const badgeBg = isAgent ? "#eff6ff" : isRec ? "#ecfdf5" : "#fffbeb";
+            const badgeColor = isAgent ? "#0070ba" : isRec ? "#059669" : "#d97706";
             return (
               <div key={idx} style={{
-                background: "#090d16",
-                border: "1px solid rgba(255, 255, 255, 0.06)",
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
                 borderRadius: "8px",
                 padding: "14px 16px",
                 display: "flex",
@@ -667,9 +688,18 @@ function NegotiationRoom() {
                 gap: "4px",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "12px", fontWeight: "600", color: badgeColor }}>{m.from}</span>
+                  <span style={{
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    background: badgeBg,
+                    color: badgeColor,
+                  }}>
+                    {m.from}
+                  </span>
                 </div>
-                <div style={{ fontSize: "13.5px", color: "#f8fafc", lineHeight: "1.5" }}>
+                <div style={{ fontSize: "13.5px", color: "#374151", lineHeight: "1.5" }}>
                   {m.text}
                 </div>
               </div>
@@ -681,7 +711,7 @@ function NegotiationRoom() {
   );
 }
 
-// --- View 5: Approvals & Authentic PayPal Orders v2 Settlement Interface ---
+// --- View 5: Authentic White & Blue PayPal Checkout & Settlement ---
 
 function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
   const [loginEmail, setLoginEmail] = useState("");
@@ -756,30 +786,30 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
     <>
       <PageHeader
         title="Approvals & Settlement"
-        description="Independent buyer authorization. Zero commingled funds — each enterprise authorizes directly with PayPal."
+        description="Independent bilateral buyer authorization via PayPal Orders v2. Zero pooled funds."
       />
 
-      {/* Account Verification */}
+      {/* Enterprise Sign-In Card */}
       {!token ? (
         <Card style={{ maxWidth: "480px", marginBottom: "24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
             <span style={{ color: "#0070ba" }}><Icons.Lock /></span>
-            <span style={{ fontSize: "14px", fontWeight: "600" }}>Enterprise Buyer Sign In</span>
+            <span style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Enterprise Buyer Sign In</span>
           </div>
           <form onSubmit={handleLogin}>
             <input
               type="email"
-              placeholder="enterprise@domain.com"
+              placeholder="buyer@enterprise.com"
               value={loginEmail}
               onChange={(e) => setLoginEmail(e.target.value)}
               style={{
                 width: "100%",
-                padding: "9px 12px",
+                padding: "10px 12px",
                 borderRadius: "6px",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                background: "#090d16",
-                color: "#f8fafc",
-                fontSize: "13px",
+                border: "1px solid #d1d5db",
+                background: "#ffffff",
+                color: "#111827",
+                fontSize: "13.5px",
                 marginBottom: "12px",
                 outline: "none",
               }}
@@ -789,12 +819,12 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
               disabled={loading}
               style={{
                 width: "100%",
-                padding: "9px 16px",
+                padding: "10px 16px",
                 background: "#0070ba",
                 color: "#ffffff",
                 borderRadius: "6px",
-                fontSize: "13px",
-                fontWeight: "500",
+                fontSize: "13.5px",
+                fontWeight: "600",
                 cursor: "pointer",
               }}
             >
@@ -802,8 +832,8 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
             </button>
           </form>
 
-          <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
-            <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "8px" }}>
+          <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", fontWeight: "600", textTransform: "uppercase" }}>
               Quick switch demo account:
             </div>
             <div style={{ display: "flex", gap: "6px" }}>
@@ -816,12 +846,13 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
                   }}
                   style={{
                     padding: "5px 10px",
-                    background: "#151f33",
-                    color: "#94a3b8",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    background: "#f1f5f9",
+                    color: "#374151",
+                    border: "1px solid #cbd5e1",
                     borderRadius: "4px",
                     fontSize: "11px",
                     cursor: "pointer",
+                    fontWeight: "500",
                   }}
                 >
                   {acc.name.split(" ")[0]}
@@ -836,24 +867,25 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
           justifyContent: "space-between",
           alignItems: "center",
           padding: "12px 18px",
-          background: "#0e1524",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "#ecfdf5",
+          border: "1px solid #a7f3d0",
           borderRadius: "8px",
           marginBottom: "24px",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ color: "#10b981" }}><Icons.Check /></span>
-            <span style={{ fontSize: "13px" }}>
-              Authenticated Organization: <strong style={{ color: "#f8fafc" }}>{orgName}</strong>
+            <span style={{ color: "#059669" }}><Icons.Check /></span>
+            <span style={{ fontSize: "13.5px", color: "#065f46" }}>
+              Authenticated Enterprise: <strong style={{ color: "#047857" }}>{orgName}</strong>
             </span>
           </div>
           <button
             onClick={onLogout}
             style={{
               fontSize: "12px",
-              color: "#ef4444",
+              color: "#dc2626",
               background: "transparent",
               cursor: "pointer",
+              fontWeight: "600",
             }}
           >
             Switch Account
@@ -861,37 +893,39 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
         </div>
       )}
 
-      {/* Buyer Order Commitment Table */}
+      {/* Buyer Commitment List */}
       <div style={{ marginBottom: "28px" }}>
-        <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px" }}>
+        <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", marginBottom: "12px" }}>
           Pool Participants & Order Statuses
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {buyers.map((b) => (
             <div key={b.name} style={{
-              background: "#0e1524",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
               borderRadius: "8px",
               padding: "14px 18px",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}>
               <div>
-                <div style={{ fontSize: "14px", fontWeight: "500" }}>{b.name}</div>
-                <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
-                  {b.qty} units × $365.00 = <strong style={{ color: "#f8fafc" }}>${b.amount.toLocaleString()} USD</strong>
+                <div style={{ fontSize: "14.5px", fontWeight: "600", color: "#111827" }}>{b.name}</div>
+                <div style={{ fontSize: "12.5px", color: "#6b7280", marginTop: "2px" }}>
+                  {b.qty} units × $365.00 = <strong style={{ color: "#111827" }}>${b.amount.toLocaleString()} USD</strong>
                 </div>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{
                   fontSize: "12px",
+                  fontWeight: "600",
                   padding: "4px 10px",
                   borderRadius: "4px",
-                  background: b.status === "Authorized" ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)",
-                  color: b.status === "Authorized" ? "#10b981" : "#f59e0b",
-                  border: `1px solid ${b.status === "Authorized" ? "rgba(16, 185, 129, 0.25)" : "rgba(245, 158, 11, 0.25)"}`,
+                  background: b.status === "Authorized" ? "#ecfdf5" : "#fffbeb",
+                  color: b.status === "Authorized" ? "#059669" : "#d97706",
+                  border: `1px solid ${b.status === "Authorized" ? "#a7f3d0" : "#fde68a"}`,
                 }}>
                   {b.status}
                 </span>
@@ -903,13 +937,14 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
                       initializePayPalOrder(b);
                     }}
                     style={{
-                      padding: "6px 14px",
+                      padding: "7px 16px",
                       background: "#0070ba",
                       color: "#ffffff",
                       borderRadius: "6px",
                       fontSize: "12.5px",
-                      fontWeight: "500",
+                      fontWeight: "600",
                       cursor: "pointer",
+                      boxShadow: "0 1px 2px rgba(0, 112, 186, 0.2)",
                     }}
                   >
                     Authorize Order
@@ -921,65 +956,70 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
         </div>
       </div>
 
-      {/* --- REAL PAYPAL CHECKOUT INTERFACE --- */}
+      {/* --- MODERN WHITE & BLUE PAYPAL CHECKOUT CARD --- */}
       {selectedBuyer && orderState && (
         <div style={{
-          background: "#0e1524",
-          border: "1px solid #0070ba",
+          background: "#ffffff",
+          border: "2px solid #0070ba",
           borderRadius: "10px",
           padding: "24px",
           marginTop: "16px",
+          boxShadow: "0 8px 24px rgba(0, 112, 186, 0.08)",
         }}>
-          {/* PayPal Top Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", paddingBottom: "16px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", paddingBottom: "14px", borderBottom: "1px solid #e5e7eb" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Icons.PayPal />
               <div>
-                <div style={{ fontSize: "15px", fontWeight: "600", color: "#f8fafc" }}>PayPal Checkout · Orders v2</div>
-                <div style={{ fontSize: "11px", color: "#64748b" }}>Individual Buyer Escrow Hold</div>
+                <div style={{ fontSize: "16px", fontWeight: "700", color: "#003087" }}>
+                  PayPal Checkout · Orders v2
+                </div>
+                <div style={{ fontSize: "11.5px", color: "#6b7280" }}>
+                  Individual Bilateral Escrow Authorization
+                </div>
               </div>
             </div>
-            <div style={{ textAlign: "right", fontFamily: "monospace", fontSize: "12px", color: "#94a3b8" }}>
+            <div style={{ textAlign: "right", fontFamily: "monospace", fontSize: "12px", color: "#6b7280" }}>
               {orderState.mint_order_id}
             </div>
           </div>
 
-          {/* Invoice Breakdown */}
+          {/* Line Item Invoice Breakdown */}
           <div style={{
-            background: "#090d16",
-            border: "1px solid rgba(255, 255, 255, 0.06)",
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0",
             borderRadius: "8px",
             padding: "16px",
             marginBottom: "20px",
-            fontSize: "13px",
+            fontSize: "13.5px",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-              <span style={{ color: "#94a3b8" }}>Item: Industrial Centrifugal Pump 5HP</span>
-              <span style={{ color: "#f8fafc" }}>{selectedBuyer.qty} units × $365.00</span>
+              <span style={{ color: "#4b5563" }}>Item: Industrial Centrifugal Pump 5HP</span>
+              <span style={{ color: "#111827", fontWeight: "600" }}>{selectedBuyer.qty} units × $365.00</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "#64748b" }}>
-              <span>Retail Baseline:</span>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "#6b7280" }}>
+              <span>Retail Baseline Price:</span>
               <span style={{ textDecoration: "line-through" }}>${(selectedBuyer.qty * 415).toLocaleString()} USD</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", color: "#10b981" }}>
-              <span>MINT Negotiation Discount:</span>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", color: "#059669", fontWeight: "500" }}>
+              <span>MINT Volume Discount:</span>
               <span>-${(selectedBuyer.qty * (415 - 365)).toLocaleString()} USD</span>
             </div>
             <div style={{
               display: "flex",
               justifyContent: "space-between",
-              paddingTop: "10px",
-              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-              fontSize: "15px",
-              fontWeight: "600",
+              paddingTop: "12px",
+              borderTop: "1px solid #cbd5e1",
+              fontSize: "16px",
+              fontWeight: "700",
             }}>
-              <span>Total Authorization Amount:</span>
-              <span style={{ color: "#38bdf8" }}>${orderState.amount?.toLocaleString()} USD</span>
+              <span style={{ color: "#111827" }}>Total Escrow Commitment:</span>
+              <span style={{ color: "#0070ba" }}>${orderState.amount?.toLocaleString()} USD</span>
             </div>
           </div>
 
-          {/* PayPal Action Buttons */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "420px", margin: "0 auto" }}>
+          {/* Official PayPal Buttons Container */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "400px", margin: "0 auto" }}>
             {orderState.approval_url ? (
               <a
                 href={orderState.approval_url}
@@ -993,12 +1033,13 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
                   padding: "12px 20px",
                   background: "#ffc439",
                   color: "#003087",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
+                  borderRadius: "24px",
+                  fontSize: "14.5px",
+                  fontWeight: "700",
                   textDecoration: "none",
                   cursor: "pointer",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)",
+                  transition: "background 0.15s ease",
                 }}
               >
                 <Icons.PayPal /> Pay with PayPal
@@ -1008,10 +1049,11 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
                 disabled
                 style={{
                   padding: "12px",
-                  background: "#151f33",
+                  background: "#e2e8f0",
                   color: "#64748b",
-                  borderRadius: "6px",
-                  fontSize: "13px",
+                  borderRadius: "24px",
+                  fontSize: "14px",
+                  fontWeight: "600",
                 }}
               >
                 {loading ? "Creating PayPal Order…" : "Order Created"}
@@ -1032,18 +1074,17 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout }) {
                 padding: "11px 20px",
                 background: "#2c2e2f",
                 color: "#ffffff",
-                borderRadius: "6px",
-                fontSize: "13.5px",
-                fontWeight: "500",
+                borderRadius: "24px",
+                fontSize: "14px",
+                fontWeight: "600",
                 cursor: "pointer",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
               }}
             >
               Debit or Credit Card
             </button>
           </div>
 
-          <div style={{ textAlign: "center", marginTop: "14px", fontSize: "11px", color: "#64748b" }}>
+          <div style={{ textAlign: "center", marginTop: "14px", fontSize: "11.5px", color: "#6b7280" }}>
             Secured by PayPal Sandbox Orders v2 · Funds captured only upon verified collective pool finalization
           </div>
         </div>

@@ -1,22 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg-page: #090d16;
-  --bg-sidebar: #060910;
-  --bg-surface: #0e1524;
-  --bg-raised: #151f33;
-  --bg-raised-hover: #1c2842;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.16);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --bg-page: #f5f7fa;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-raised: #f8fafc;
+  --bg-raised-hover: #f1f5f9;
+  --border-subtle: #e2e8f0;
+  --border-card: #e5e7eb;
+  --border-hover: #cbd5e1;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
   --paypal-blue: #0070ba;
   --paypal-deep: #003087;
+  --paypal-light: #f0f7fd;
   --paypal-gold: #ffc439;
-  --accent-green: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
+  --paypal-gold-hover: #f4b41a;
+  --accent-green: #059669;
+  --accent-green-bg: #ecfdf5;
+  --accent-amber: #d97706;
+  --accent-amber-bg: #fffbeb;
+  --accent-red: #dc2626;
+  --accent-red-bg: #fef2f2;
 }
 
 * {
@@ -50,16 +56,16 @@ code, pre, .font-mono {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-sidebar);
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: #cbd5e1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #94a3b8;
 }
 
 button {
