@@ -1,22 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --bg-page: #070b14;
-  --bg-sidebar: #050810;
-  --bg-card: #0c1322;
-  --bg-card-hover: #101a2e;
-  --bg-raised: #142036;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(0, 195, 255, 0.35);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --bg-page: #f5f7fa;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-raised: #f1f5f9;
+  --border-subtle: #e2e8f0;
+  --border-focus: #0070ba;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
   --paypal-blue: #0070ba;
-  --paypal-cyan: #00c3ff;
   --paypal-deep: #003087;
   --paypal-gold: #ffc439;
-  --accent-green: #10b981;
-  --accent-amber: #f59e0b;
+  --paypal-light-blue: #eff6ff;
+  --accent-green: #059669;
+  --accent-amber: #d97706;
 }
 
 * {
@@ -43,44 +43,37 @@ code, pre, .font-mono {
   font-variant-numeric: tabular-nums;
 }
 
-/* Tasteful Fintech Glows */
-.glow-card {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.glow-card:hover {
-  border-color: rgba(0, 195, 255, 0.35) !important;
-  box-shadow: 0 4px 20px rgba(0, 112, 186, 0.15) !important;
-}
-
-.glow-cyan {
-  box-shadow: 0 0 16px rgba(0, 195, 255, 0.22);
+/* Institutional Clean Card */
+.fintech-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.glow-emerald {
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+.fintech-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-.glow-paypal {
-  box-shadow: 0 0 18px rgba(0, 112, 186, 0.28);
-}
-
-/* Custom Scrollbar */
+/* Clean Professional Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-sidebar);
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: #cbd5e1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 195, 255, 0.4);
+  background: #94a3b8;
 }
 
 button {
