@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// --- Custom SVGs & Line Icons ---
+// --- Clean Line Icons ---
 const Icons = {
   Command: () => (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -19,6 +19,11 @@ const Icons = {
       <circle cx="12" cy="12" r="10" />
       <path d="M12 2a10 10 0 0 1 10 10" stroke="#00c3ff" strokeWidth="2.5" />
       <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
+  Analytics: () => (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v18h18M19 9l-5 5-4-4-3 3" />
     </svg>
   ),
   Services: () => (
@@ -82,6 +87,7 @@ const Icons = {
 const navItems = [
   { key: "command", label: "Command Centre", icon: Icons.Command },
   { key: "probability", label: "ROI & Probability Engine", icon: Icons.Probability, highlight: true },
+  { key: "analytics", label: "Demand & Savings Graph", icon: Icons.Analytics, badge: "Interactive" },
   { key: "services", label: "PayPal Services & Rails", icon: Icons.Services, badge: "5 Rails" },
   { key: "pools", label: "Active Demand Pools", icon: Icons.Pools },
   { key: "predictive", label: "Predictive Buying", icon: Icons.Predictive },
@@ -117,7 +123,7 @@ export default function Home() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#070b14", color: "#f8fafc" }}>
-      {/* Sidebar - Deep Obsidian Slate with Cyan Accents */}
+      {/* Sidebar */}
       <aside style={{
         width: "264px",
         background: "#050810",
@@ -266,7 +272,7 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* Main View Area */}
+      {/* Main Workspace */}
       <main style={{ flex: 1, padding: "34px 44px", overflowY: "auto", maxWidth: "1200px" }}>
         {active === "command" && (
           <CommandCentre
@@ -276,6 +282,11 @@ export default function Home() {
         )}
         {active === "probability" && (
           <CustomerProbabilityEngine
+            onStartCheckout={handleStartCheckout}
+          />
+        )}
+        {active === "analytics" && (
+          <DemandAndSavingsGraph
             onStartCheckout={handleStartCheckout}
           />
         )}
@@ -326,7 +337,7 @@ export default function Home() {
   );
 }
 
-// --- Common UI Components with Subtle Magnitude Glow ---
+// --- Common UI Components ---
 
 function PageHeader({ title, description, badge, action }) {
   return (
@@ -418,7 +429,7 @@ function CommandCentre({ onNavigate, onStartCheckout }) {
         badge="Enterprise V2"
         action={
           <button
-            onClick={() => onNavigate("probability")}
+            onClick={() => onNavigate("analytics")}
             style={{
               display: "flex",
               alignItems: "center",
@@ -434,12 +445,12 @@ function CommandCentre({ onNavigate, onStartCheckout }) {
               boxShadow: "0 0 14px rgba(0, 112, 186, 0.3)",
             }}
           >
-            <Icons.TrendingUp /> Run Customer Investment Simulator →
+            <Icons.Analytics /> View Interactive Demand Graphs →
           </button>
         }
       />
 
-      {/* KPI Stats with Controlled Luminescence */}
+      {/* KPI Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
         <Stat label="Active Equipment Pools" value="4 Active" sub="128 units aggregated" glowColor="#00c3ff" />
         <Stat label="Net Cash Saved for Buyers" value="$9,575 USD" sub="Vs retail procurement" delta glowColor="#10b981" />
@@ -541,11 +552,12 @@ function CommandCentre({ onNavigate, onStartCheckout }) {
   );
 }
 
-// --- View 2: Customer ROI & Investment Probability Engine (The Core Requested Feature) ---
+// --- View 2: Customer ROI & Dynamic Probability Engine (100% Working & Reactive) ---
 
 function CustomerProbabilityEngine({ onStartCheckout }) {
   const [units, setUnits] = useState(12);
   const [equipmentType, setEquipmentType] = useState("pump");
+  const svgRef = useRef(null);
 
   const equipmentOptions = {
     pump: { name: "Industrial Centrifugal Pump 5HP", retail: 415.00, negotiated: 365.00, poolTarget: 50, existingCommitted: 38 },
@@ -583,16 +595,56 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
   const totalNetCustomerGain = (directSavings + parseFloat(financingSaved)).toFixed(2);
   const customerRoi = ((totalNetCustomerGain / investedAmount) * 100).toFixed(1);
 
+  // Dynamic SVG Curve Points Calculation based on current pool & equipment
+  const curvePoints = useMemo(() => {
+    const steps = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
+    return steps.map((u) => {
+      const totalP = selected.existingCommitted + u;
+      let prob = 68.0;
+      if (totalP >= selected.poolTarget) {
+        prob = 98.8;
+      } else if (totalP >= selected.poolTarget * 0.9) {
+        prob = 93.5;
+      } else if (totalP >= selected.poolTarget * 0.8) {
+        prob = 86.2;
+      } else {
+        prob = Math.min(80, 68 + (totalP / selected.poolTarget) * 15);
+      }
+      const x = 70 + ((u - 2) / 28) * 660;
+      const y = 160 - ((prob - 60) / 40) * 130;
+      const inv = u * selected.negotiated;
+      return { u, prob: prob.toFixed(1), x, y, inv };
+    });
+  }, [selected]);
+
+  // Current active cursor position on graph
+  const currentX = 70 + ((units - 2) / 28) * 660;
+  const currentY = 160 - ((fulfillmentProbability - 60) / 40) * 130;
+  const polylineStr = curvePoints.map((p) => `${p.x},${p.y}`).join(" ");
+  const polygonStr = `70,160 ${polylineStr} 730,160`;
+
+  // Interactive Click to Select on Graph
+  function handleSvgClick(e) {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const scale = 800 / rect.width;
+    const svgX = clickX * scale;
+    const ratio = Math.max(0, Math.min(1, (svgX - 70) / 660));
+    const newUnits = Math.round(2 + ratio * 28);
+    setUnits(newUnits);
+  }
+
   return (
     <>
       <PageHeader
         title="Customer Investment & Probability Engine"
-        description="Simulate your enterprise capital commitment: see fulfillment probability, PayPal fee savings, and net ROI margin boost."
+        description="Simulate your enterprise capital commitment: drag slider or click graph to see fulfillment probability, fees, and ROI."
         badge="Probability AI"
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px", marginBottom: "24px" }}>
-        {/* Left: Interactive Input Panel */}
+        {/* Left: Input Panel */}
         <Card glow>
           <div style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc", marginBottom: "6px" }}>
             1. Configure Your Procurement Commitment
@@ -647,9 +699,9 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
               style={{ width: "100%", accentColor: "#00c3ff", cursor: "pointer", height: "6px" }}
             />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
-              <span>2 units ($730)</span>
-              <span>15 units ($5,475)</span>
-              <span>30 units ($10,950)</span>
+              <span>2 units (${(2 * selected.negotiated).toLocaleString()})</span>
+              <span>15 units (${(15 * selected.negotiated).toLocaleString()})</span>
+              <span>30 units (${(30 * selected.negotiated).toLocaleString()})</span>
             </div>
           </div>
 
@@ -787,76 +839,319 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
         </Card>
       </div>
 
-      {/* GRAPH: Probability Curve vs Capital Invested */}
+      {/* GRAPH: Fully Interactive & Dynamic Probability Curve (Click or Drag Slider to see position update) */}
       <Card glow>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <div>
             <div style={{ fontSize: "15px", fontWeight: "700", color: "#f8fafc" }}>
-              Customer Capital Allocation vs Probability Curve
+              Customer Capital Allocation vs Probability Curve (Live Interactive)
             </div>
             <div style={{ fontSize: "12.5px", color: "#94a3b8", marginTop: "2px" }}>
-              Simulates how incremental enterprise commitments accelerate pool fulfillment towards 100% certainty.
+              Click anywhere on the graph or drag the slider above. The cyan cursor tracks your live allocation.
             </div>
           </div>
           <span style={{ fontSize: "11px", color: "#00c3ff", background: "rgba(0, 195, 255, 0.12)", padding: "4px 8px", borderRadius: "4px" }}>
-            Stochastic Monte Carlo Model
+            Monte Carlo Mathematical Model
           </span>
         </div>
 
-        <div style={{ width: "100%", height: "200px" }}>
-          <svg viewBox="0 0 800 180" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+        <div style={{ width: "100%", height: "220px", position: "relative" }}>
+          <svg
+            ref={svgRef}
+            onClick={handleSvgClick}
+            viewBox="0 0 800 200"
+            style={{ width: "100%", height: "100%", overflow: "visible", cursor: "crosshair" }}
+          >
             {/* Grid */}
-            <line x1="50" y1="20" x2="760" y2="20" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-            <line x1="50" y1="70" x2="760" y2="70" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-            <line x1="50" y1="120" x2="760" y2="120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+            <line x1="50" y1="30" x2="760" y2="30" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <line x1="50" y1="73" x2="760" y2="73" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <line x1="50" y1="116" x2="760" y2="116" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
             <line x1="50" y1="160" x2="760" y2="160" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
 
-            <text x="40" y="24" fill="#64748b" fontSize="10" textAnchor="end">100%</text>
-            <text x="40" y="74" fill="#64748b" fontSize="10" textAnchor="end">85%</text>
-            <text x="40" y="124" fill="#64748b" fontSize="10" textAnchor="end">70%</text>
+            <text x="40" y="34" fill="#64748b" fontSize="10" textAnchor="end">100%</text>
+            <text x="40" y="77" fill="#64748b" fontSize="10" textAnchor="end">85%</text>
+            <text x="40" y="120" fill="#64748b" fontSize="10" textAnchor="end">70%</text>
+            <text x="40" y="164" fill="#64748b" fontSize="10" textAnchor="end">60%</text>
 
             {/* Glowing Gradient Curve */}
             <defs>
-              <linearGradient id="probGlow" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00c3ff" stopOpacity="0.3" />
+              <linearGradient id="probGlowActive" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00c3ff" stopOpacity="0.35" />
                 <stop offset="100%" stopColor="#00c3ff" stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
-            <polygon
-              points="80,160 80,115 220,90 380,38 540,26 720,20 720,160"
-              fill="url(#probGlow)"
-            />
-
+            <polygon points={polygonStr} fill="url(#probGlowActive)" />
             <polyline
-              points="80,115 220,90 380,38 540,26 720,20"
+              points={polylineStr}
               fill="none"
               stroke="#00c3ff"
-              strokeWidth="3"
+              strokeWidth="3.5"
               style={{ filter: "drop-shadow(0 0 8px #00c3ff)" }}
             />
 
-            {[
-              [80, 115, "4 units (72%)", "$1,460"],
-              [220, 90, "8 units (81.5%)", "$2,920"],
-              [380, 38, "12 units (94.8%)", "$4,380"],
-              [540, 26, "16 units (97.5%)", "$5,840"],
-              [720, 20, "20+ units (99.2%)", "$7,300"],
-            ].map(([x, y, label, amount], idx) => (
-              <g key={idx}>
-                <circle cx={x} cy={y} r="5" fill="#ffffff" stroke="#00c3ff" strokeWidth="2" />
-                <text x={x} y={y - 12} fill="#f8fafc" fontSize="11" fontWeight="700" textAnchor="middle">{label}</text>
-                <text x={x} y="174" fill="#64748b" fontSize="10" textAnchor="middle">{amount}</text>
+            {/* Benchmark Milestone Points */}
+            {curvePoints.filter((_, i) => i % 3 === 0).map((d) => (
+              <g key={d.u} onClick={(e) => { e.stopPropagation(); setUnits(d.u); }} style={{ cursor: "pointer" }}>
+                <circle cx={d.x} cy={d.y} r="4" fill="#0c1322" stroke="#00c3ff" strokeWidth="2" />
+                <text x={d.x} y={d.y - 10} fill="#94a3b8" fontSize="10" textAnchor="middle">{d.u}u ({d.prob}%)</text>
+                <text x={d.x} y="178" fill="#64748b" fontSize="10" textAnchor="middle">${d.inv}</text>
               </g>
             ))}
+
+            {/* DYNAMIC LIVE ACTIVE CURSOR PIN (Moves in real time with slider!) */}
+            <line x1={currentX} y1={currentY} x2={currentX} y2="160" stroke="#00c3ff" strokeWidth="2" strokeDasharray="3 3" opacity="0.8" />
+            <circle cx={currentX} cy={currentY} r="10" fill="#00c3ff" style={{ filter: "drop-shadow(0 0 12px #00c3ff)" }} />
+            <circle cx={currentX} cy={currentY} r="4" fill="#ffffff" />
+
+            {/* Active Tooltip Pill hovering over cursor */}
+            <g transform={`translate(${currentX}, ${Math.max(22, currentY - 24)})`}>
+              <rect x="-68" y="-12" width="136" height="22" rx="4" fill="#003087" stroke="#00c3ff" strokeWidth="1.5" style={{ filter: "drop-shadow(0 0 8px rgba(0, 195, 255, 0.4))" }} />
+              <text x="0" y="3" fill="#ffffff" fontSize="11" fontWeight="800" textAnchor="middle">
+                SELECTED: {units}u · {fulfillmentProbability}%
+              </text>
+            </g>
           </svg>
+        </div>
+        <div style={{ textAlign: "center", fontSize: "11px", color: "#64748b", marginTop: "10px" }}>
+          Tip: Click anywhere along the curve or use the slider above to see real-time probability & financing fee recalculation.
         </div>
       </Card>
     </>
   );
 }
 
-// --- View 3: Extended PayPal Enterprise Services & Multi-Gateway Hub ---
+// --- View 3: Dedicated Demand & Savings Interactive Graph Module ---
+
+function DemandAndSavingsGraph({ onStartCheckout }) {
+  const [activeUnits, setActiveUnits] = useState(25);
+  const [equipmentType, setEquipmentType] = useState("pump");
+  const svgRef = useRef(null);
+
+  const catalog = {
+    pump: { name: "Industrial Centrifugal Pump 5HP", retail: 415, negotiated: 365, maxUnits: 60 },
+    motor: { name: "3-Phase Induction Motor 15kW", retail: 570, negotiated: 480, maxUnits: 40 },
+    flow: { name: "Electromagnetic Flowmeter DN80", retail: 475, negotiated: 390, maxUnits: 40 },
+    valve: { name: "High-Pressure Gate Valve PN25", retail: 260, negotiated: 210, maxUnits: 60 },
+  };
+
+  const current = catalog[equipmentType];
+  const maxU = current.maxUnits;
+
+  const currentRetailTotal = activeUnits * current.retail;
+  const currentCollectiveTotal = activeUnits * current.negotiated;
+  const currentSavings = currentRetailTotal - currentCollectiveTotal;
+
+  // Max scale calculation for Y axis
+  const maxY = current.retail * maxU;
+
+  // Interactive scrubber calculation
+  const currentX = 60 + (activeUnits / maxU) * 680;
+  const currentYRetail = 180 - (currentRetailTotal / maxY) * 140;
+  const currentYCollective = 180 - (currentCollectiveTotal / maxY) * 140;
+
+  function handleGraphClick(e) {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const scale = 800 / rect.width;
+    const svgX = clickX * scale;
+    const ratio = Math.max(0, Math.min(1, (svgX - 60) / 680));
+    const newU = Math.max(1, Math.round(ratio * maxU));
+    setActiveUnits(newU);
+  }
+
+  return (
+    <>
+      <PageHeader
+        title="Interactive Demand & Savings Analytics Graph"
+        description="Scrub through order quantities to visualize the growing cash savings between single-buyer retail and collective PayPal escrow."
+        badge="Live Graph"
+      />
+
+      {/* Equipment Selector */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+        {Object.entries(catalog).map(([key, item]) => (
+          <button
+            key={key}
+            onClick={() => setEquipmentType(key)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              background: equipmentType === key ? "rgba(0, 112, 186, 0.3)" : "#0c1322",
+              border: `1.5px solid ${equipmentType === key ? "#00c3ff" : "rgba(255, 255, 255, 0.08)"}`,
+              color: equipmentType === key ? "#ffffff" : "#94a3b8",
+              fontSize: "12.5px",
+              fontWeight: "700",
+              cursor: "pointer",
+            }}
+          >
+            {item.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Interactive Graph Card */}
+      <Card glow style={{ marginBottom: "24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+          <div>
+            <div style={{ fontSize: "16px", fontWeight: "700", color: "#f8fafc" }}>
+              Spend Comparison & Cash Margin Divergence
+            </div>
+            <div style={{ fontSize: "12.5px", color: "#94a3b8", marginTop: "2px" }}>
+              Hover or click anywhere across the graph to inspect exact price points and savings.
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "20px", fontSize: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "12px", height: "3px", background: "#9ca3af", borderTop: "1px dashed #9ca3af" }} />
+              <span style={{ color: "#9ca3af" }}>Individual Retail Cost (${current.retail}/u)</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "12px", height: "3px", background: "#00c3ff" }} />
+              <span style={{ color: "#00c3ff", fontWeight: "700" }}>MINT PayPal Collective (${current.negotiated}/u)</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "12px", height: "12px", background: "rgba(16, 185, 129, 0.3)", border: "1px solid #10b981", borderRadius: "2px" }} />
+              <span style={{ color: "#10b981", fontWeight: "700" }}>Customer Net Savings</span>
+            </div>
+          </div>
+        </div>
+
+        {/* SVG Chart */}
+        <div style={{ width: "100%", height: "250px", position: "relative" }}>
+          <svg
+            ref={svgRef}
+            onClick={handleGraphClick}
+            viewBox="0 0 800 220"
+            style={{ width: "100%", height: "100%", overflow: "visible", cursor: "crosshair" }}
+          >
+            {/* Grid */}
+            <line x1="60" y1="40" x2="740" y2="40" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <line x1="60" y1="90" x2="740" y2="90" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <line x1="60" y1="140" x2="740" y2="140" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <line x1="60" y1="180" x2="740" y2="180" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+
+            <text x="50" y="44" fill="#64748b" fontSize="10" textAnchor="end">${(maxY).toLocaleString()}</text>
+            <text x="50" y="94" fill="#64748b" fontSize="10" textAnchor="end">${Math.round(maxY * 0.65).toLocaleString()}</text>
+            <text x="50" y="144" fill="#64748b" fontSize="10" textAnchor="end">${Math.round(maxY * 0.3).toLocaleString()}</text>
+            <text x="50" y="184" fill="#64748b" fontSize="10" textAnchor="end">$0</text>
+
+            {/* Savings Area Between Retail and Collective */}
+            <polygon
+              points={`60,180 740,${180 - (current.retail * maxU / maxY) * 140} 740,${180 - (current.negotiated * maxU / maxY) * 140} 60,180`}
+              fill="rgba(16, 185, 129, 0.15)"
+              stroke="none"
+            />
+
+            {/* Retail Cost Line (Dashed) */}
+            <line
+              x1="60"
+              y1="180"
+              x2="740"
+              y2={180 - (current.retail * maxU / maxY) * 140}
+              stroke="#9ca3af"
+              strokeWidth="2.5"
+              strokeDasharray="4 4"
+            />
+
+            {/* Collective PayPal Line (Glowing Cyan) */}
+            <line
+              x1="60"
+              y1="180"
+              x2="740"
+              y2={180 - (current.negotiated * maxU / maxY) * 140}
+              stroke="#00c3ff"
+              strokeWidth="3.5"
+              style={{ filter: "drop-shadow(0 0 8px #00c3ff)" }}
+            />
+
+            {/* X-Axis Milestone Labels */}
+            {[10, 20, 30, 40, 50, maxU].map((u) => {
+              const x = 60 + (u / maxU) * 680;
+              return (
+                <g key={u}>
+                  <line x1={x} y1="180" x2={x} y2="185" stroke="rgba(255,255,255,0.2)" />
+                  <text x={x} y="198" fill="#64748b" fontSize="10" textAnchor="middle">{u} units</text>
+                </g>
+              );
+            })}
+
+            {/* ACTIVE INTERACTIVE SCRUBBER CURSOR */}
+            <line x1={currentX} y1="30" x2={currentX} y2="180" stroke="#00c3ff" strokeWidth="2" strokeDasharray="3 3" />
+            <circle cx={currentX} cy={currentYRetail} r="5" fill="#ffffff" stroke="#9ca3af" strokeWidth="2" />
+            <circle cx={currentX} cy={currentYCollective} r="7" fill="#00c3ff" style={{ filter: "drop-shadow(0 0 10px #00c3ff)" }} />
+            <circle cx={currentX} cy={currentYCollective} r="3" fill="#ffffff" />
+
+            {/* Floating Tooltip Pill */}
+            <g transform={`translate(${Math.min(670, Math.max(130, currentX))}, ${Math.max(35, currentYCollective - 35)})`}>
+              <rect x="-115" y="-18" width="230" height="34" rx="6" fill="#050810" stroke="#00c3ff" strokeWidth="1.5" style={{ filter: "drop-shadow(0 0 10px rgba(0, 195, 255, 0.4))" }} />
+              <text x="0" y="-3" fill="#ffffff" fontSize="11" fontWeight="800" textAnchor="middle">
+                {activeUnits} Units · Save ${currentSavings.toLocaleString()} USD
+              </text>
+              <text x="0" y="11" fill="#10b981" fontSize="10" fontWeight="600" textAnchor="middle">
+                Retail: ${currentRetailTotal.toLocaleString()} → PayPal: ${currentCollectiveTotal.toLocaleString()}
+              </text>
+            </g>
+          </svg>
+        </div>
+
+        {/* Real-time Slider Control */}
+        <div style={{ marginTop: "16px", padding: "14px", background: "#080d18", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+            <span style={{ fontSize: "13px", fontWeight: "700", color: "#f8fafc" }}>Interactive Volume Scrubber:</span>
+            <span style={{ fontSize: "16px", fontWeight: "800", color: "#00c3ff" }}>{activeUnits} units</span>
+          </div>
+          <input
+            type="range"
+            min="1"
+            max={maxU}
+            value={activeUnits}
+            onChange={(e) => setActiveUnits(parseInt(e.target.value))}
+            style={{ width: "100%", accentColor: "#00c3ff", cursor: "pointer" }}
+          />
+        </div>
+      </Card>
+
+      {/* Financial Summary & Action */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr) 1.2fr", gap: "16px" }}>
+        <Stat label="Total Retail Cost" value={`$${currentRetailTotal.toLocaleString()}`} sub="At standard pricing" />
+        <Stat label="PayPal Collective Cost" value={`$${currentCollectiveTotal.toLocaleString()}`} sub="With bulk volume lock" glowColor="#00c3ff" />
+        <Stat label="Total Cash Saved" value={`$${currentSavings.toLocaleString()}`} sub="Direct capital retained" delta glowColor="#10b981" />
+        <Card style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button
+            onClick={() => onStartCheckout({
+              id: 1,
+              name: current.name,
+              qty: activeUnits,
+              amount: currentCollectiveTotal,
+              savings: currentSavings,
+            })}
+            style={{
+              width: "100%",
+              padding: "12px 20px",
+              background: "#ffc439",
+              color: "#003087",
+              borderRadius: "24px",
+              fontSize: "14px",
+              fontWeight: "800",
+              cursor: "pointer",
+              boxShadow: "0 0 16px rgba(255, 196, 57, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+            }}
+          >
+            <Icons.PayPal /> Authorize ${currentCollectiveTotal.toLocaleString()} on PayPal
+          </button>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+// --- View 4: Extended PayPal Enterprise Services & Multi-Gateway Hub ---
 
 function PayPalEnterpriseServicesHub({ onNavigate }) {
   const [services, setServices] = useState([
@@ -998,7 +1293,7 @@ function PayPalEnterpriseServicesHub({ onNavigate }) {
   );
 }
 
-// --- View 4: Active Demand Pools ---
+// --- View 5: Active Demand Pools ---
 
 function ActiveDemandPools({ onStartCheckout }) {
   const pools = [
@@ -1158,7 +1453,7 @@ function ActiveDemandPools({ onStartCheckout }) {
   );
 }
 
-// --- View 5: Predictive Buying ---
+// --- View 6: Predictive Buying ---
 
 function PredictiveBuying() {
   const predictions = [
@@ -1210,7 +1505,7 @@ function PredictiveBuying() {
   );
 }
 
-// --- View 6: Demand Mesh ---
+// --- View 7: Demand Mesh ---
 
 function DemandMesh() {
   const members = [
@@ -1277,7 +1572,7 @@ function DemandMesh() {
   );
 }
 
-// --- View 7: Negotiation Room ---
+// --- View 8: Negotiation Room ---
 
 function NegotiationRoom() {
   const messages = [
@@ -1324,7 +1619,7 @@ function NegotiationRoom() {
   );
 }
 
-// --- View 8: PayPal Orders v2 Settlement ---
+// --- View 9: PayPal Orders v2 Settlement ---
 
 function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselectedCheckout }) {
   const [loginEmail, setLoginEmail] = useState("");
