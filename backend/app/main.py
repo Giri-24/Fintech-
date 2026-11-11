@@ -40,6 +40,8 @@ def root():
         "status": "foundation + payments + auth skeleton",
         "endpoints": [
             "/api/v1/demo/command-centre",
+            "/api/v1/demo/analytics",
+            "/api/v1/demo/pools",
             "/api/v1/demo/predictions",
             "/api/v1/demo/demand-mesh",
             "/api/v1/demo/negotiation",
@@ -48,6 +50,7 @@ def root():
             "/api/v1/payments/paypal/create-order",
             "/api/v1/payments/paypal/capture",
             "/api/v1/payments/paypal/orders",
+            "/api/v1/payments/paypal/summary",
             "/api/v1/auth/login",
             "/api/v1/auth/me",
         ],

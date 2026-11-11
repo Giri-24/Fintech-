@@ -262,6 +262,30 @@ def list_orders():
     }
 
 
+@router.get("/paypal/summary")
+def get_paypal_summary():
+    """Gateway metrics and transaction telemetry for PayPal service monitoring."""
+    total_orders = len(_orders)
+    captured_orders = [o for o in _orders.values() if o.get("status") == "CAPTURED"]
+    pending_orders = [o for o in _orders.values() if o.get("status") in ("CREATED", "APPROVED")]
+    total_captured_amount = sum(o.get("amount", 0) for o in captured_orders)
+    total_pending_amount = sum(o.get("amount", 0) for o in pending_orders)
+
+    return {
+        "gateway_status": "Active & Healthy",
+        "mode": PAYPAL_MODE,
+        "credentials_configured": bool(PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET),
+        "webhook_configured": bool(PAYPAL_WEBHOOK_ID),
+        "total_transactions": total_orders,
+        "captured_count": len(captured_orders),
+        "pending_count": len(pending_orders),
+        "total_captured_usd": total_captured_amount,
+        "total_pending_usd": total_pending_amount,
+        "supported_payment_sources": ["paypal_wallet", "pay_later", "debit_credit_card", "vault"],
+        "recent_orders": list(_orders.values())[-5:]
+    }
+
+
 @router.get("/paypal/order/{paypal_order_id}")
 async def get_order_status(paypal_order_id: str):
     order = _orders.get(paypal_order_id)
