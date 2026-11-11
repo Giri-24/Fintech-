@@ -35,6 +35,7 @@ PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
 PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
 PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox").lower()
 PAYPAL_WEBHOOK_ID = os.getenv("PAYPAL_WEBHOOK_ID", "")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
 
 BASE_URL = (
     "https://api-m.sandbox.paypal.com"
@@ -110,7 +111,7 @@ async def create_paypal_order(req: CreateOrderRequest):
             "mode": "mock",
             "mint_order_id": mint_order_id,
             "paypal_order_id": paypal_order_id,
-            "approval_url": f"http://localhost:3000/payment/return?token={paypal_order_id}&mode=mock",
+            "approval_url": f"{FRONTEND_URL}/payment/return?token={paypal_order_id}&mode=mock",
             "amount": req.amount,
             "currency": req.currency,
             "next_step": "In mock mode. Redirect buyer to checkout simulation or configure PayPal credentials for real Sandbox flow."
@@ -134,8 +135,8 @@ async def create_paypal_order(req: CreateOrderRequest):
                 "experience_context": {
                     "payment_method_preference": "IMMEDIATE_PAYMENT_REQUIRED",
                     "user_action": "PAY_NOW",
-                    "return_url": "http://localhost:3000/payment/return",
-                    "cancel_url": "http://localhost:3000/payment/cancel"
+                    "return_url": f"{FRONTEND_URL}/payment/return",
+                    "cancel_url": f"{FRONTEND_URL}/payment/cancel"
                 }
             }
         }
