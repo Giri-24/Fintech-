@@ -820,83 +820,183 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
         </Card>
       </div>
 
-      {/* Probability Curve Graph */}
-      <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <div>
-            <div style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a" }}>
-              Order Allocation vs Fulfillment Curve
+      {/* ── Probability Curve: Robinhood-style hero chart ── */}
+      <Card style={{ padding: "0", overflow: "hidden" }}>
+        {/* Chart Header Strip */}
+        <div style={{ padding: "20px 24px 0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: "600", color: "#64748b", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: "4px" }}>
+                Fulfillment Confidence
+              </div>
+              <div style={{ fontSize: "36px", fontWeight: "700", color: "#003087", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                {fulfillmentProbability}%
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: "3px",
+                  fontSize: "13px", fontWeight: "600",
+                  color: fulfillmentProbability >= 90 ? "#059669" : fulfillmentProbability >= 80 ? "#d97706" : "#64748b",
+                }}>
+                  {fulfillmentProbability >= 90 ? "▲" : fulfillmentProbability >= 80 ? "▲" : "—"}
+                  {` ${units} units committed`}
+                </span>
+                <span style={{ fontSize: "12px", color: "#94a3b8" }}>· ${investedAmount.toLocaleString()} authorized</span>
+              </div>
             </div>
-            <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
-              Click directly on the chart or drag the volume slider above to view real-time probability transitions.
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+              <span style={{ fontSize: "11px", background: fulfillmentProbability >= 90 ? "#dcfce7" : "#eff6ff", color: fulfillmentProbability >= 90 ? "#15803d" : "#0369a1", padding: "3px 10px", borderRadius: "20px", fontWeight: "700" }}>
+                {fulfillmentProbability >= 90 ? "Tier-1 Locked" : fulfillmentProbability >= 80 ? "Near Lock" : "Open Pool"}
+              </span>
+              <span style={{ fontSize: "11px", color: "#94a3b8" }}>Empirical Model</span>
             </div>
           </div>
-          <span style={{ fontSize: "11px", color: "#0369a1", background: "#e0f2fe", padding: "3px 8px", borderRadius: "4px", fontWeight: "600" }}>
-            Empirical Curve
-          </span>
+
+          {/* Mini KPI Row */}
+          <div style={{ display: "flex", gap: "24px", marginTop: "16px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
+            {[
+              { label: "Pool Progress", value: `${progressTowardsTarget}%` },
+              { label: "Your Saving", value: `$${directSavings.toLocaleString()}` },
+              { label: "PayPal Fee", value: `$${paypalFee}` },
+              { label: "Net Gain", value: `+$${totalNetCustomerGain}` },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "500", marginBottom: "2px" }}>{label}</div>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a" }}>{value}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div style={{ width: "100%", height: "210px", position: "relative" }}>
+        {/* SVG Chart — full-bleed, no card padding */}
+        <div style={{ width: "100%", position: "relative", background: "#fafcff" }}>
           <svg
             ref={svgRef}
             onClick={handleSvgClick}
-            viewBox="0 0 800 200"
-            style={{ width: "100%", height: "100%", overflow: "visible", cursor: "crosshair" }}
+            viewBox="0 0 800 220"
+            style={{ width: "100%", display: "block", cursor: "crosshair" }}
+            preserveAspectRatio="none"
           >
-            {/* Subtle Grid */}
-            <line x1="50" y1="30" x2="760" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="50" y1="73" x2="760" y2="73" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="50" y1="116" x2="760" y2="116" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="50" y1="160" x2="760" y2="160" stroke="#cbd5e1" strokeWidth="1" />
+            {/* Y-axis label track */}
+            <rect x="0" y="0" width="52" height="220" fill="#fafcff" />
 
-            <text x="40" y="34" fill="#94a3b8" fontSize="10" textAnchor="end">100%</text>
-            <text x="40" y="77" fill="#94a3b8" fontSize="10" textAnchor="end">85%</text>
-            <text x="40" y="120" fill="#94a3b8" fontSize="10" textAnchor="end">70%</text>
-            <text x="40" y="164" fill="#94a3b8" fontSize="10" textAnchor="end">60%</text>
+            {/* Horizontal grid bands */}
+            {[0, 1, 2, 3].map((i) => {
+              const y = 20 + i * 55;
+              const pct = [100, 85, 70, 60][i];
+              return (
+                <g key={i}>
+                  <line x1="52" y1={y} x2="800" y2={y} stroke="#f1f5f9" strokeWidth="1" />
+                  <text x="46" y={y + 4} fill="#b0bac7" fontSize="10" textAnchor="end" fontFamily="sans-serif">{pct}%</text>
+                </g>
+              );
+            })}
+            {/* Baseline */}
+            <line x1="52" y1="185" x2="800" y2="185" stroke="#e2e8f0" strokeWidth="1.5" />
 
-            {/* Smooth Spline Fill + Curve */}
-            <path d={areaPath} fill="#eff6ff" stroke="none" />
+            {/* Gradient fill under curve */}
+            <defs>
+              <linearGradient id="probGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+
+            {/* Filled area path */}
             <path
-              d={splinePath}
+              d={(() => {
+                const pts = curvePoints.map(p => ({
+                  x: 52 + ((p.u - 2) / 28) * 748,
+                  y: 20 + ((100 - parseFloat(p.prob)) / 42) * 165,
+                }));
+                const sp = getSmoothSpline(pts);
+                const last = pts[pts.length - 1];
+                const first = pts[0];
+                return sp + ` L ${last.x.toFixed(1)} 185 L ${first.x.toFixed(1)} 185 Z`;
+              })()}
+              fill="url(#probGrad)"
+              stroke="none"
+            />
+
+            {/* Main curve line */}
+            <path
+              d={(() => {
+                const pts = curvePoints.map(p => ({
+                  x: 52 + ((p.u - 2) / 28) * 748,
+                  y: 20 + ((100 - parseFloat(p.prob)) / 42) * 165,
+                }));
+                return getSmoothSpline(pts);
+              })()}
               fill="none"
-              stroke="#0070ba"
+              stroke="#2563eb"
               strokeWidth="2.5"
-              strokeLinejoin="round"
               strokeLinecap="round"
             />
 
-            {/* Tier Threshold Annotations */}
-            {[{ u: 10, label: "10u" }, { u: 20, label: "20u" }, { u: 30, label: "30u" }].map(({ u, label }) => {
-              const tx = 70 + ((u - 2) / 28) * 660;
+            {/* Tier boundary lines */}
+            {[{ u: 10, label: "Tier 1" }, { u: 20, label: "Tier 2" }, { u: 28, label: "Tier 3" }].map(({ u, label }) => {
+              const tx = 52 + ((u - 2) / 28) * 748;
               return (
                 <g key={u}>
-                  <line x1={tx} y1="30" x2={tx} y2="160" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3 3" />
-                  <text x={tx} y="175" fill="#94a3b8" fontSize="10" textAnchor="middle">{label}</text>
+                  <line x1={tx} y1="20" x2={tx} y2="185" stroke="#dbeafe" strokeWidth="1" strokeDasharray="4 3" />
+                  <text x={tx + 4} y="32" fill="#93c5fd" fontSize="9" fontFamily="sans-serif">{label}</text>
                 </g>
               );
             })}
 
-            {/* Key Anchor Points (sparse, not every milestone) */}
-            {curvePoints.filter((_, i) => i === 0 || i === 14 || i === 28).map((d) => (
-              <g key={d.u} onClick={(e) => { e.stopPropagation(); setUnits(d.u); }} style={{ cursor: "pointer" }}>
-                <circle cx={d.x} cy={d.y} r="4.5" fill="#ffffff" stroke="#0070ba" strokeWidth="2" />
-                <text x={d.x} y={d.y - 11} fill="#64748b" fontSize="10" textAnchor="middle">{d.prob}%</text>
-              </g>
-            ))}
+            {/* Active scrubber vertical */}
+            {(() => {
+              const ax = 52 + ((units - 2) / 28) * 748;
+              const ay = 20 + ((100 - fulfillmentProbability) / 42) * 165;
+              const tooltipX = Math.min(720, Math.max(120, ax));
+              return (
+                <g>
+                  {/* Vertical rule */}
+                  <line x1={ax} y1="20" x2={ax} y2="185" stroke="#2563eb" strokeWidth="1" strokeOpacity="0.4" />
+                  {/* Dot on curve */}
+                  <circle cx={ax} cy={ay} r="8" fill="#2563eb" fillOpacity="0.15" />
+                  <circle cx={ax} cy={ay} r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2.5" />
+                  {/* Bottom tick */}
+                  <line x1={ax} y1="185" x2={ax} y2="193" stroke="#2563eb" strokeWidth="2" />
+                  <text x={ax} y="206" fill="#2563eb" fontSize="11" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">{units}u</text>
+                  {/* Floating card tooltip */}
+                  <g transform={`translate(${tooltipX}, ${Math.max(50, ay - 44)})`}>
+                    <rect x="-72" y="-20" width="144" height="38" rx="8" fill="#003087" />
+                    <text x="0" y="-5" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
+                      {fulfillmentProbability}% confidence
+                    </text>
+                    <text x="0" y="12" fill="#93c5fd" fontSize="10" textAnchor="middle" fontFamily="sans-serif">
+                      ${investedAmount.toLocaleString()} · save ${directSavings.toLocaleString()}
+                    </text>
+                  </g>
+                </g>
+              );
+            })()}
 
-            {/* Active Position Indicator */}
-            <line x1={currentX} y1={currentY} x2={currentX} y2="160" stroke="#0070ba" strokeWidth="1.5" strokeDasharray="3 3" />
-            <circle cx={currentX} cy={currentY} r="7" fill="#0070ba" />
-            <circle cx={currentX} cy={currentY} r="3" fill="#ffffff" />
-
-            {/* Clean Floating Tooltip */}
-            <g transform={`translate(${currentX}, ${Math.max(22, currentY - 24)})`}>
-              <rect x="-65" y="-12" width="130" height="22" rx="4" fill="#003087" />
-              <text x="0" y="3" fill="#ffffff" fontSize="11" fontWeight="600" textAnchor="middle">
-                {units} Units · {fulfillmentProbability}%
-              </text>
-            </g>
+            {/* X-axis unit ticks */}
+            {[2, 8, 14, 20, 26, 30].map((u) => {
+              const tx = 52 + ((u - 2) / 28) * 748;
+              return (
+                <g key={u}>
+                  <text x={tx} y="218" fill="#b0bac7" fontSize="10" textAnchor="middle" fontFamily="sans-serif">{u}u</text>
+                </g>
+              );
+            })}
           </svg>
+        </div>
+
+        {/* Scrubber Footer */}
+        <div style={{ padding: "14px 24px 20px", borderTop: "1px solid #f1f5f9" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#94a3b8", marginBottom: "6px" }}>
+            <span>2 units</span>
+            <span style={{ color: "#0070ba", fontWeight: "600" }}>Drag to adjust commitment</span>
+            <span>30 units</span>
+          </div>
+          <input
+            type="range" min="2" max="30" value={units}
+            onChange={(e) => setUnits(parseInt(e.target.value))}
+            style={{ width: "100%", accentColor: "#2563eb", cursor: "pointer", height: "6px" }}
+          />
         </div>
       </Card>
     </>
@@ -982,163 +1082,278 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
   return (
     <>
       <PageHeader
-        title="Demand & Savings Analytics Graph"
-        description="Visualize the widening capital divergence between standalone retail procurement and collective PayPal bulk pricing."
-        badge="Real-time Visualizer"
+        title="Demand & Savings Analytics"
+        description="Real-time divergence between retail catalog spend and PayPal collective bulk pricing across procurement tiers."
+        badge="Live Visualizer"
       />
 
-      {/* Equipment Selector */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+      {/* ── Equipment Selector Tabs ── */}
+      <div style={{ display: "flex", gap: "6px", marginBottom: "20px", flexWrap: "wrap" }}>
         {Object.entries(catalog).map(([key, item]) => (
           <button
             key={key}
             onClick={() => setEquipmentType(key)}
             style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              background: equipmentType === key ? "#eff6ff" : "#ffffff",
-              border: `1.5px solid ${equipmentType === key ? "#0070ba" : "#e2e8f0"}`,
-              color: equipmentType === key ? "#003087" : "#475569",
-              fontSize: "13px",
+              padding: "7px 16px",
+              borderRadius: "20px",
+              background: equipmentType === key ? "#003087" : "#ffffff",
+              border: `1.5px solid ${equipmentType === key ? "#003087" : "#e2e8f0"}`,
+              color: equipmentType === key ? "#ffffff" : "#475569",
+              fontSize: "12.5px",
               fontWeight: "600",
               cursor: "pointer",
+              transition: "all 0.15s ease",
             }}
           >
-            {item.name}
+            {item.name.split(" ").slice(0, 2).join(" ")}
           </button>
         ))}
       </div>
 
-      {/* Main Interactive Graph Card */}
-      <Card style={{ marginBottom: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <div>
-            <div style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a" }}>
-              Total Spend vs Collective Savings Divergence
-            </div>
-            <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
-              Drag the volume scrubber below or click the chart to inspect pricing tiers.
+      {/* ── Main Chart + Side Panel Layout ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "16px", marginBottom: "20px", alignItems: "stretch" }}>
+
+        {/* LEFT: Hero Chart Card */}
+        <Card style={{ padding: "0", overflow: "hidden" }}>
+
+          {/* Chart header with big number */}
+          <div style={{ padding: "20px 24px 14px", borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ fontSize: "11px", fontWeight: "600", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
+                  Cash Retained at {activeUnits} units
+                </div>
+                <div style={{ fontSize: "38px", fontWeight: "700", color: "#059669", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                  ${currentSavings.toLocaleString()}
+                </div>
+                <div style={{ fontSize: "13px", color: "#64748b", marginTop: "5px" }}>
+                  ${currentRetailTotal.toLocaleString()} retail → ${currentCollectiveTotal.toLocaleString()} collective
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+                {/* Legend */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px", fontSize: "11.5px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                    <span style={{ width: "24px", height: "2px", background: "#94a3b8", display: "inline-block", borderTop: "2px dashed #94a3b8" }} />
+                    <span style={{ color: "#64748b" }}>Retail ${current.retail}/u</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                    <span style={{ width: "24px", height: "3px", background: "#2563eb", display: "inline-block", borderRadius: "2px" }} />
+                    <span style={{ color: "#2563eb", fontWeight: "600" }}>Collective from ${current.tiers[current.tiers.length - 1].p}/u</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                    <span style={{ width: "14px", height: "10px", background: "#dcfce7", border: "1px solid #86efac", display: "inline-block", borderRadius: "2px" }} />
+                    <span style={{ color: "#059669", fontWeight: "600" }}>Savings zone</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: "18px", fontSize: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ width: "12px", height: "2px", background: "#94a3b8", borderTop: "1px dashed #94a3b8" }} />
-              <span style={{ color: "#64748b" }}>Retail Catalog (${current.retail}/u)</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ width: "12px", height: "3px", background: "#0070ba" }} />
-              <span style={{ color: "#0070ba", fontWeight: "600" }}>PayPal Collective (from ${current.tiers[current.tiers.length-1].p}/u)</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ width: "10px", height: "10px", background: "#d1fae5", border: "1px solid #10b981", borderRadius: "2px" }} />
-              <span style={{ color: "#059669", fontWeight: "600" }}>Cash Retained</span>
-            </div>
+
+          {/* SVG Chart — full bleed */}
+          <div style={{ width: "100%", background: "#fafcff", position: "relative" }}>
+            <svg
+              ref={svgRef}
+              onClick={handleGraphClick}
+              viewBox="0 0 800 240"
+              style={{ width: "100%", display: "block", cursor: "crosshair" }}
+              preserveAspectRatio="none"
+            >
+              {/* Gradient defs */}
+              <defs>
+                <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.22" />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0.04" />
+                </linearGradient>
+                <linearGradient id="retailGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#94a3b8" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              {/* Y-axis backdrop */}
+              <rect x="0" y="0" width="58" height="240" fill="#fafcff" />
+
+              {/* Horizontal grid lines */}
+              {[0, 1, 2, 3].map((i) => {
+                const y = 16 + i * 54;
+                const val = Math.round(maxY * (1 - i * 0.33));
+                return (
+                  <g key={i}>
+                    <line x1="58" y1={y} x2="800" y2={y} stroke="#f1f5f9" strokeWidth="1" />
+                    <text x="52" y={y + 4} fill="#b0bac7" fontSize="10" textAnchor="end" fontFamily="sans-serif">
+                      ${val >= 1000 ? (val / 1000).toFixed(0) + "k" : val}
+                    </text>
+                  </g>
+                );
+              })}
+              {/* Baseline */}
+              <line x1="58" y1="196" x2="800" y2="196" stroke="#e2e8f0" strokeWidth="1.5" />
+              <text x="52" y="200" fill="#b0bac7" fontSize="10" textAnchor="end" fontFamily="sans-serif">$0</text>
+
+              {/* Map graphPoints to new coordinate space */}
+              {(() => {
+                const toY = (val) => 16 + (1 - val / maxY) * 180;
+                const pts = graphPoints.map((p) => ({
+                  x: 58 + (p.u / maxU) * 742,
+                  retailY: toY(p.u * current.retail),
+                  collectiveY: toY(p.u * getTierPrice(current.tiers, p.u)),
+                }));
+
+                const rSpline = getSmoothSpline(pts.map(p => ({ x: p.x, y: p.retailY })));
+                const cSpline = getSmoothSpline(pts.map(p => ({ x: p.x, y: p.collectiveY })));
+                const lastP = pts[pts.length - 1];
+                const firstP = pts[0];
+                const savingsFill = cSpline
+                  + ` L ${lastP.x.toFixed(1)} ${lastP.retailY.toFixed(1)}`
+                  + " " + getSmoothSpline([...pts].reverse().map(p => ({ x: p.x, y: p.retailY })))
+                  + " Z";
+
+                // Tier boundary positions
+                const boundaries = current.tiers.slice(0, -1).map(t => ({
+                  u: t.max,
+                  x: 58 + (t.max / maxU) * 742,
+                }));
+
+                // Active crosshair values
+                const ax = 58 + (activeUnits / maxU) * 742;
+                const aRetailY = toY(currentRetailTotal);
+                const aCollY = toY(currentCollectiveTotal);
+                const tooltipX = Math.min(730, Math.max(140, ax));
+
+                return (
+                  <g>
+                    {/* Savings gradient fill */}
+                    <path d={savingsFill} fill="url(#savingsGrad)" stroke="none" />
+
+                    {/* Retail area fill */}
+                    <path
+                      d={rSpline + ` L ${lastP.x.toFixed(1)} 196 L ${firstP.x.toFixed(1)} 196 Z`}
+                      fill="url(#retailGrad)"
+                      stroke="none"
+                    />
+
+                    {/* Retail dashed line */}
+                    <path d={rSpline} fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="6 4" strokeLinecap="round" />
+
+                    {/* Collective solid blue line */}
+                    <path d={cSpline} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
+
+                    {/* Tier boundary verticals */}
+                    {boundaries.map(({ u, x }) => (
+                      <g key={u}>
+                        <line x1={x} y1="16" x2={x} y2="196" stroke="#dbeafe" strokeWidth="1" strokeDasharray="4 3" />
+                        <text x={x + 4} y="28" fill="#93c5fd" fontSize="9" fontFamily="sans-serif">T{current.tiers.findIndex(t => t.max === u) + 1}</text>
+                      </g>
+                    ))}
+
+                    {/* X-axis ticks */}
+                    {[1, ...current.tiers.map(t => t.max)].map((u) => {
+                      const tx = 58 + (u / maxU) * 742;
+                      return (
+                        <g key={u}>
+                          <line x1={tx} y1="196" x2={tx} y2="202" stroke="#e2e8f0" />
+                          <text x={tx} y="216" fill="#94a3b8" fontSize="10" textAnchor="middle" fontFamily="sans-serif">{u}u</text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Active crosshair */}
+                    <line x1={ax} y1="16" x2={ax} y2="196" stroke="#2563eb" strokeWidth="1" strokeOpacity="0.35" />
+
+                    {/* Retail dot */}
+                    <circle cx={ax} cy={aRetailY} r="4.5" fill="#ffffff" stroke="#94a3b8" strokeWidth="2" />
+                    {/* Collective dot */}
+                    <circle cx={ax} cy={aCollY} r="8" fill="#2563eb" fillOpacity="0.15" />
+                    <circle cx={ax} cy={aCollY} r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2.5" />
+
+                    {/* Green savings arrow */}
+                    <line x1={ax + 12} y1={aCollY} x2={ax + 12} y2={aRetailY} stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowUp)" />
+
+                    {/* Floating tooltip */}
+                    <g transform={`translate(${tooltipX}, ${Math.max(60, aCollY - 50)})`}>
+                      <rect x="-120" y="-24" width="240" height="46" rx="10" fill="#003087" />
+                      <text x="0" y="-7" fill="#ffffff" fontSize="13" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
+                        {activeUnits} units · Save ${currentSavings.toLocaleString()}
+                      </text>
+                      <text x="-80" y="13" fill="#93c5fd" fontSize="10" textAnchor="start" fontFamily="sans-serif">
+                        Retail ${currentRetailTotal.toLocaleString()}
+                      </text>
+                      <text x="80" y="13" fill="#86efac" fontSize="10" fontWeight="600" textAnchor="end" fontFamily="sans-serif">
+                        Collective ${currentCollectiveTotal.toLocaleString()}
+                      </text>
+                    </g>
+                  </g>
+                );
+              })()}
+            </svg>
           </div>
-        </div>
 
-        {/* SVG Chart */}
-        <div style={{ width: "100%", height: "240px", position: "relative" }}>
-          <svg
-            ref={svgRef}
-            onClick={handleGraphClick}
-            viewBox="0 0 800 220"
-            style={{ width: "100%", height: "100%", overflow: "visible", cursor: "crosshair" }}
-          >
-            {/* Grid */}
-            <line x1="60" y1="40" x2="740" y2="40" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="60" y1="90" x2="740" y2="90" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="60" y1="140" x2="740" y2="140" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="60" y1="180" x2="740" y2="180" stroke="#cbd5e1" strokeWidth="1.5" />
-
-            <text x="50" y="44" fill="#94a3b8" fontSize="10" textAnchor="end">${(maxY).toLocaleString()}</text>
-            <text x="50" y="94" fill="#94a3b8" fontSize="10" textAnchor="end">${Math.round(maxY * 0.65).toLocaleString()}</text>
-            <text x="50" y="144" fill="#94a3b8" fontSize="10" textAnchor="end">${Math.round(maxY * 0.3).toLocaleString()}</text>
-            <text x="50" y="184" fill="#94a3b8" fontSize="10" textAnchor="end">$0</text>
-
-            {/* Savings Fill Area (between retail and collective splines) */}
-            <path d={savingsArea} fill="#ecfdf5" stroke="none" opacity="0.85" />
-
-            {/* Retail Cost Line (Dashed smooth spline) */}
-            <path
-              d={retailSpline}
-              fill="none"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeDasharray="5 4"
-              strokeLinecap="round"
+          {/* Scrubber row */}
+          <div style={{ padding: "12px 24px 18px", borderTop: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#94a3b8", marginBottom: "5px" }}>
+              <span>1 unit</span>
+              <span style={{ color: "#2563eb", fontWeight: "600" }}>Volume: {activeUnits} units</span>
+              <span>{maxU} units</span>
+            </div>
+            <input
+              type="range" min="1" max={maxU} value={activeUnits}
+              onChange={(e) => setActiveUnits(parseInt(e.target.value))}
+              style={{ width: "100%", accentColor: "#2563eb", cursor: "pointer" }}
             />
+          </div>
+        </Card>
 
-            {/* Collective PayPal Line (Solid smooth spline with tier steps) */}
-            <path
-              d={collectiveSpline}
-              fill="none"
-              stroke="#0070ba"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+        {/* RIGHT: Summary Panel */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Current Tier Badge */}
+          <Card style={{ textAlign: "center", padding: "16px" }}>
+            <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+              Current Tier
+            </div>
+            <div style={{ fontSize: "28px", fontWeight: "700", color: "#2563eb" }}>
+              ${currentTierPrice}/u
+            </div>
+            <div style={{ fontSize: "12px", color: "#059669", fontWeight: "600", marginTop: "4px" }}>
+              Save ${current.retail - currentTierPrice}/unit vs retail
+            </div>
+            <div style={{ marginTop: "12px", width: "100%", height: "6px", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden" }}>
+              <div style={{ width: `${(activeUnits / maxU) * 100}%`, height: "100%", background: "#2563eb", borderRadius: "3px" }} />
+            </div>
+            <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>{activeUnits} / {maxU} max</div>
+          </Card>
 
-            {/* Tier Boundary Dashed Verticals */}
-            {tierBoundaries.map(({ u, x }) => (
-              <g key={u}>
-                <line x1={x} y1="30" x2={x} y2="180" stroke="#bfdbfe" strokeWidth="1" strokeDasharray="3 3" />
-                <text x={x} y="210" fill="#93c5fd" fontSize="9" textAnchor="middle">{u}u</text>
-              </g>
-            ))}
-
-            {/* X-Axis Milestone Labels */}
-            {[10, 20, 30, 40, 50, maxU].filter((u) => u <= maxU).map((u) => {
-              const x = 60 + (u / maxU) * 680;
+          {/* Tier Breakdown */}
+          <Card style={{ padding: "14px 16px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a", marginBottom: "10px" }}>Pricing Tiers</div>
+            {current.tiers.map((t, i) => {
+              const prevMax = i === 0 ? 0 : current.tiers[i - 1].max;
+              const isActive = activeUnits > prevMax && activeUnits <= t.max;
               return (
-                <g key={u}>
-                  <line x1={x} y1="180" x2={x} y2="185" stroke="#cbd5e1" />
-                  <text x={x} y="198" fill="#64748b" fontSize="10" textAnchor="middle">{u} units</text>
-                </g>
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "7px 10px", borderRadius: "6px", marginBottom: "5px",
+                  background: isActive ? "#eff6ff" : "#f8fafc",
+                  border: `1px solid ${isActive ? "#bfdbfe" : "#f1f5f9"}`,
+                }}>
+                  <div>
+                    <div style={{ fontSize: "11px", fontWeight: "600", color: isActive ? "#1d4ed8" : "#64748b" }}>
+                      {prevMax + 1}–{t.max} units
+                    </div>
+                    <div style={{ fontSize: "10px", color: "#94a3b8" }}>Tier {i + 1}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "13px", fontWeight: "700", color: isActive ? "#1d4ed8" : "#0f172a" }}>${t.p}/u</div>
+                    <div style={{ fontSize: "10px", color: "#059669", fontWeight: "600" }}>
+                      {Math.round(((current.retail - t.p) / current.retail) * 100)}% off
+                    </div>
+                  </div>
+                </div>
               );
             })}
+          </Card>
 
-            {/* Interactive Cursor Indicator */}
-            <line x1={currentX} y1="30" x2={currentX} y2="180" stroke="#0070ba" strokeWidth="1.5" strokeDasharray="3 3" />
-            <circle cx={currentX} cy={currentYRetail} r="4" fill="#ffffff" stroke="#94a3b8" strokeWidth="2" />
-            <circle cx={currentX} cy={currentYCollective} r="6" fill="#0070ba" />
-            <circle cx={currentX} cy={currentYCollective} r="2.5" fill="#ffffff" />
-
-            {/* Clean White Tooltip */}
-            <g transform={`translate(${Math.min(670, Math.max(130, currentX))}, ${Math.max(35, currentYCollective - 35)})`}>
-              <rect x="-110" y="-18" width="220" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.06))" />
-              <text x="0" y="-3" fill="#0f172a" fontSize="11" fontWeight="700" textAnchor="middle">
-                {activeUnits} Units · Save ${currentSavings.toLocaleString()} USD
-              </text>
-              <text x="0" y="11" fill="#059669" fontSize="10" fontWeight="600" textAnchor="middle">
-                Retail: ${currentRetailTotal.toLocaleString()} → Collective: ${currentCollectiveTotal.toLocaleString()}
-              </text>
-            </g>
-          </svg>
-        </div>
-
-        {/* Real-time Volume Scrubber */}
-        <div style={{ marginTop: "16px", padding: "14px 16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>Interactive Volume Scrubber:</span>
-            <span style={{ fontSize: "16px", fontWeight: "700", color: "#0070ba" }}>{activeUnits} units</span>
-          </div>
-          <input
-            type="range"
-            min="1"
-            max={maxU}
-            value={activeUnits}
-            onChange={(e) => setActiveUnits(parseInt(e.target.value))}
-            style={{ width: "100%", accentColor: "#0070ba", cursor: "pointer" }}
-          />
-        </div>
-      </Card>
-
-      {/* Financial Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr) 1.2fr", gap: "16px" }}>
-        <Stat label="Total Retail Cost" value={`$${currentRetailTotal.toLocaleString()}`} sub="At standard single-unit price" />
-        <Stat label="PayPal Collective Cost" value={`$${currentCollectiveTotal.toLocaleString()}`} sub="With bulk volume commitment" />
-        <Stat label="Direct Cash Retained" value={`$${currentSavings.toLocaleString()}`} sub="Immediate margin saved" delta />
-        <Card style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {/* Authorize Button */}
           <button
             onClick={() => onStartCheckout({
               id: 1,
@@ -1149,23 +1364,31 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
             })}
             style={{
               width: "100%",
-              padding: "12px 20px",
+              padding: "14px 16px",
               background: "#ffc439",
               color: "#003087",
               borderRadius: "24px",
-              fontSize: "13.5px",
+              fontSize: "13px",
               fontWeight: "700",
               cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.08)",
+              boxShadow: "0 2px 8px rgba(0, 48, 135, 0.12)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: "8px",
+              border: "none",
             }}
           >
-            <Icons.PayPal /> Authorize ${currentCollectiveTotal.toLocaleString()} on PayPal
+            <Icons.PayPal /> Authorize ${currentCollectiveTotal.toLocaleString()}
           </button>
-        </Card>
+        </div>
+      </div>
+
+      {/* ── Bottom Summary Stats ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+        <Stat label="Total Retail Cost" value={`$${currentRetailTotal.toLocaleString()}`} sub="At standard single-unit price" />
+        <Stat label="PayPal Collective Cost" value={`$${currentCollectiveTotal.toLocaleString()}`} sub="Tier-adjusted bulk pricing" />
+        <Stat label="Direct Cash Retained" value={`$${currentSavings.toLocaleString()}`} sub="Immediate margin preserved" delta />
       </div>
     </>
   );
