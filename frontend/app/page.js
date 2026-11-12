@@ -391,6 +391,24 @@ function Stat({ label, value, sub, delta }) {
   );
 }
 
+// --- Spline interpolation helper for smooth financial curves ---
+function getSmoothSpline(points) {
+  if (!points || points.length < 2) return "";
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i === 0 ? 0 : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
 // --- View 1: Command Centre Overview ---
 
 function CommandCentre({ onNavigate, onStartCheckout }) {
@@ -564,7 +582,7 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
   const customerRoi = ((totalNetCustomerGain / investedAmount) * 100).toFixed(1);
 
   const curvePoints = useMemo(() => {
-    const steps = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
+    const steps = Array.from({ length: 29 }, (_, i) => i + 2); // [2..30], 29 steps
     return steps.map((u) => {
       const totalP = selected.existingCommitted + u;
       let prob = 68.0;
@@ -586,8 +604,10 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
 
   const currentX = 70 + ((units - 2) / 28) * 660;
   const currentY = 160 - ((fulfillmentProbability - 60) / 40) * 130;
-  const polylineStr = curvePoints.map((p) => `${p.x},${p.y}`).join(" ");
-  const polygonStr = `70,160 ${polylineStr} 730,160`;
+  const splinePath = getSmoothSpline(curvePoints);
+  const lastPt = curvePoints[curvePoints.length - 1];
+  const firstPt = curvePoints[0];
+  const areaPath = splinePath + ` L ${lastPt.x.toFixed(1)} 160 L ${firstPt.x.toFixed(1)} 160 Z`;
 
   function handleSvgClick(e) {
     if (!svgRef.current) return;
@@ -834,21 +854,33 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
             <text x="40" y="120" fill="#94a3b8" fontSize="10" textAnchor="end">70%</text>
             <text x="40" y="164" fill="#94a3b8" fontSize="10" textAnchor="end">60%</text>
 
-            {/* Clean Light Blue Fill */}
-            <polygon points={polygonStr} fill="#eff6ff" />
-            <polyline
-              points={polylineStr}
+            {/* Smooth Spline Fill + Curve */}
+            <path d={areaPath} fill="#eff6ff" stroke="none" />
+            <path
+              d={splinePath}
               fill="none"
               stroke="#0070ba"
               strokeWidth="2.5"
+              strokeLinejoin="round"
+              strokeLinecap="round"
             />
 
-            {/* Milestone Points */}
-            {curvePoints.filter((_, i) => i % 3 === 0).map((d) => (
+            {/* Tier Threshold Annotations */}
+            {[{ u: 10, label: "10u" }, { u: 20, label: "20u" }, { u: 30, label: "30u" }].map(({ u, label }) => {
+              const tx = 70 + ((u - 2) / 28) * 660;
+              return (
+                <g key={u}>
+                  <line x1={tx} y1="30" x2={tx} y2="160" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3 3" />
+                  <text x={tx} y="175" fill="#94a3b8" fontSize="10" textAnchor="middle">{label}</text>
+                </g>
+              );
+            })}
+
+            {/* Key Anchor Points (sparse, not every milestone) */}
+            {curvePoints.filter((_, i) => i === 0 || i === 14 || i === 28).map((d) => (
               <g key={d.u} onClick={(e) => { e.stopPropagation(); setUnits(d.u); }} style={{ cursor: "pointer" }}>
-                <circle cx={d.x} cy={d.y} r="4" fill="#ffffff" stroke="#0070ba" strokeWidth="2" />
-                <text x={d.x} y={d.y - 10} fill="#64748b" fontSize="10" textAnchor="middle">{d.u}u ({d.prob}%)</text>
-                <text x={d.x} y="178" fill="#94a3b8" fontSize="10" textAnchor="middle">${d.inv}</text>
+                <circle cx={d.x} cy={d.y} r="4.5" fill="#ffffff" stroke="#0070ba" strokeWidth="2" />
+                <text x={d.x} y={d.y - 11} fill="#64748b" fontSize="10" textAnchor="middle">{d.prob}%</text>
               </g>
             ))}
 
@@ -879,20 +911,58 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
   const svgRef = useRef(null);
 
   const catalog = {
-    pump: { name: "Industrial Centrifugal Pump 5HP", retail: 415, negotiated: 365, maxUnits: 60 },
-    motor: { name: "3-Phase Induction Motor 15kW", retail: 570, negotiated: 480, maxUnits: 40 },
-    flow: { name: "Electromagnetic Flowmeter DN80", retail: 475, negotiated: 390, maxUnits: 40 },
-    valve: { name: "High-Pressure Gate Valve PN25", retail: 260, negotiated: 210, maxUnits: 60 },
+    pump:  { name: "Industrial Centrifugal Pump 5HP",   retail: 415, negotiated: 365, maxUnits: 60,
+              tiers: [{max:10,p:415},{max:25,p:385},{max:45,p:365},{max:60,p:340}] },
+    motor: { name: "3-Phase Induction Motor 15kW",      retail: 570, negotiated: 480, maxUnits: 40,
+              tiers: [{max:10,p:570},{max:25,p:520},{max:35,p:480},{max:40,p:450}] },
+    flow:  { name: "Electromagnetic Flowmeter DN80",    retail: 475, negotiated: 390, maxUnits: 40,
+              tiers: [{max:10,p:475},{max:22,p:440},{max:35,p:390},{max:40,p:360}] },
+    valve: { name: "High-Pressure Gate Valve PN25",     retail: 260, negotiated: 210, maxUnits: 60,
+              tiers: [{max:12,p:260},{max:28,p:235},{max:45,p:210},{max:60,p:190}] },
   };
+
+  function getTierPrice(tiers, u) {
+    for (const t of tiers) { if (u <= t.max) return t.p; }
+    return tiers[tiers.length - 1].p;
+  }
 
   const current = catalog[equipmentType];
   const maxU = current.maxUnits;
 
+  const currentTierPrice = getTierPrice(current.tiers, activeUnits);
   const currentRetailTotal = activeUnits * current.retail;
-  const currentCollectiveTotal = activeUnits * current.negotiated;
+  const currentCollectiveTotal = activeUnits * currentTierPrice;
   const currentSavings = currentRetailTotal - currentCollectiveTotal;
 
   const maxY = current.retail * maxU;
+
+  // Generate dense point arrays for smooth spline curves
+  const graphPoints = useMemo(() => {
+    return Array.from({ length: maxU }, (_, i) => {
+      const u = i + 1;
+      const x = 60 + (u / maxU) * 680;
+      const retailY = 180 - ((u * current.retail) / maxY) * 140;
+      const collectivePrice = getTierPrice(current.tiers, u);
+      const collectiveY = 180 - ((u * collectivePrice) / maxY) * 140;
+      return { u, x, retailY, collectiveY, savings: u * (current.retail - collectivePrice) };
+    });
+  }, [current, maxU, maxY]);
+
+  // Tier boundary positions for annotation lines
+  const tierBoundaries = current.tiers.slice(0, -1).map((t) => ({
+    u: t.max,
+    x: 60 + (t.max / maxU) * 680,
+  }));
+
+  const retailSpline = getSmoothSpline(graphPoints.map((p) => ({ x: p.x, y: p.retailY })));
+  const collectiveSpline = getSmoothSpline(graphPoints.map((p) => ({ x: p.x, y: p.collectiveY })));
+  const lastGP = graphPoints[graphPoints.length - 1];
+  const firstGP = graphPoints[0];
+  // Savings fill: collective forward + retail backward
+  const savingsArea = collectiveSpline
+    + ` L ${lastGP.x.toFixed(1)} ${lastGP.retailY.toFixed(1)}`
+    + " " + getSmoothSpline([...graphPoints].reverse().map((p) => ({ x: p.x, y: p.retailY })))
+    + " Z";
 
   const currentX = 60 + (activeUnits / maxU) * 680;
   const currentYRetail = 180 - (currentRetailTotal / maxY) * 140;
@@ -957,7 +1027,7 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ width: "12px", height: "3px", background: "#0070ba" }} />
-              <span style={{ color: "#0070ba", fontWeight: "600" }}>PayPal Collective (${current.negotiated}/u)</span>
+              <span style={{ color: "#0070ba", fontWeight: "600" }}>PayPal Collective (from ${current.tiers[current.tiers.length-1].p}/u)</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ width: "10px", height: "10px", background: "#d1fae5", border: "1px solid #10b981", borderRadius: "2px" }} />
@@ -985,36 +1055,39 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
             <text x="50" y="144" fill="#94a3b8" fontSize="10" textAnchor="end">${Math.round(maxY * 0.3).toLocaleString()}</text>
             <text x="50" y="184" fill="#94a3b8" fontSize="10" textAnchor="end">$0</text>
 
-            {/* Savings Area Between Retail and Collective */}
-            <polygon
-              points={`60,180 740,${180 - (current.retail * maxU / maxY) * 140} 740,${180 - (current.negotiated * maxU / maxY) * 140} 60,180`}
-              fill="#ecfdf5"
-              stroke="none"
-            />
+            {/* Savings Fill Area (between retail and collective splines) */}
+            <path d={savingsArea} fill="#ecfdf5" stroke="none" opacity="0.85" />
 
-            {/* Retail Cost Line (Dashed) */}
-            <line
-              x1="60"
-              y1="180"
-              x2="740"
-              y2={180 - (current.retail * maxU / maxY) * 140}
+            {/* Retail Cost Line (Dashed smooth spline) */}
+            <path
+              d={retailSpline}
+              fill="none"
               stroke="#94a3b8"
               strokeWidth="2"
-              strokeDasharray="4 4"
+              strokeDasharray="5 4"
+              strokeLinecap="round"
             />
 
-            {/* Collective PayPal Line (Solid Blue) */}
-            <line
-              x1="60"
-              y1="180"
-              x2="740"
-              y2={180 - (current.negotiated * maxU / maxY) * 140}
+            {/* Collective PayPal Line (Solid smooth spline with tier steps) */}
+            <path
+              d={collectiveSpline}
+              fill="none"
               stroke="#0070ba"
               strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
 
+            {/* Tier Boundary Dashed Verticals */}
+            {tierBoundaries.map(({ u, x }) => (
+              <g key={u}>
+                <line x1={x} y1="30" x2={x} y2="180" stroke="#bfdbfe" strokeWidth="1" strokeDasharray="3 3" />
+                <text x={x} y="210" fill="#93c5fd" fontSize="9" textAnchor="middle">{u}u</text>
+              </g>
+            ))}
+
             {/* X-Axis Milestone Labels */}
-            {[10, 20, 30, 40, 50, maxU].map((u) => {
+            {[10, 20, 30, 40, 50, maxU].filter((u) => u <= maxU).map((u) => {
               const x = 60 + (u / maxU) * 680;
               return (
                 <g key={u}>
