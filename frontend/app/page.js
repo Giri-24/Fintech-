@@ -545,6 +545,8 @@ function CommandCentre({ onNavigate, onStartCheckout }) {
 
 function CustomerProbabilityEngine({ onStartCheckout }) {
   const [units, setUnits] = useState(12);
+  const [hoverUnits, setHoverUnits] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [equipmentType, setEquipmentType] = useState("pump");
   const svgRef = useRef(null);
 
@@ -556,12 +558,13 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
   };
 
   const selected = equipmentOptions[equipmentType];
+  const displayUnits = hoverUnits ?? units;
 
-  const investedAmount = units * selected.negotiated;
-  const retailBaseline = units * selected.retail;
+  const investedAmount = displayUnits * selected.negotiated;
+  const retailBaseline = displayUnits * selected.retail;
   const directSavings = retailBaseline - investedAmount;
 
-  const totalPoolAfterInvestment = selected.existingCommitted + units;
+  const totalPoolAfterInvestment = selected.existingCommitted + displayUnits;
   const progressTowardsTarget = Math.min(100, Math.round((totalPoolAfterInvestment / selected.poolTarget) * 100));
 
   let fulfillmentProbability = 68.0;
@@ -595,29 +598,58 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
       } else {
         prob = Math.min(80, 68 + (totalP / selected.poolTarget) * 15);
       }
-      const x = 70 + ((u - 2) / 28) * 660;
-      const y = 160 - ((prob - 60) / 40) * 130;
+      const x = 52 + ((u - 2) / 28) * 748;
+      const y = 20 + ((100 - prob) / 42) * 165;
       const inv = u * selected.negotiated;
       return { u, prob: prob.toFixed(1), x, y, inv };
     });
   }, [selected]);
 
-  const currentX = 70 + ((units - 2) / 28) * 660;
-  const currentY = 160 - ((fulfillmentProbability - 60) / 40) * 130;
-  const splinePath = getSmoothSpline(curvePoints);
-  const lastPt = curvePoints[curvePoints.length - 1];
-  const firstPt = curvePoints[0];
-  const areaPath = splinePath + ` L ${lastPt.x.toFixed(1)} 160 L ${firstPt.x.toFixed(1)} 160 Z`;
-
-  function handleSvgClick(e) {
-    if (!svgRef.current) return;
+  function getUnitsFromEvent(e) {
+    if (!svgRef.current) return null;
     const rect = svgRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+    const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+    const clickX = clientX - rect.left;
     const scale = 800 / rect.width;
     const svgX = clickX * scale;
-    const ratio = Math.max(0, Math.min(1, (svgX - 70) / 660));
-    const newUnits = Math.round(2 + ratio * 28);
-    setUnits(newUnits);
+    const ratio = Math.max(0, Math.min(1, (svgX - 52) / 748));
+    return Math.max(2, Math.min(30, Math.round(2 + ratio * 28)));
+  }
+
+  function handleSvgMouseMove(e) {
+    const u = getUnitsFromEvent(e);
+    if (u !== null) {
+      setHoverUnits(u);
+      if (isDragging) {
+        setUnits(u);
+      }
+    }
+  }
+
+  function handleSvgMouseDown(e) {
+    setIsDragging(true);
+    const u = getUnitsFromEvent(e);
+    if (u !== null) {
+      setUnits(u);
+      setHoverUnits(u);
+    }
+  }
+
+  function handleSvgMouseUp() {
+    setIsDragging(false);
+  }
+
+  function handleSvgMouseLeave() {
+    setIsDragging(false);
+    setHoverUnits(null);
+  }
+
+  function handleSvgClick(e) {
+    const u = getUnitsFromEvent(e);
+    if (u !== null) {
+      setUnits(u);
+      setHoverUnits(u);
+    }
   }
 
   return (
@@ -848,7 +880,21 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
               <span style={{ fontSize: "11px", background: fulfillmentProbability >= 90 ? "#dcfce7" : "#eff6ff", color: fulfillmentProbability >= 90 ? "#15803d" : "#0369a1", padding: "3px 10px", borderRadius: "20px", fontWeight: "700" }}>
                 {fulfillmentProbability >= 90 ? "Tier-1 Locked" : fulfillmentProbability >= 80 ? "Near Lock" : "Open Pool"}
               </span>
-              <span style={{ fontSize: "11px", color: "#94a3b8" }}>Empirical Model</span>
+              <span style={{
+                fontSize: "10.5px",
+                background: hoverUnits ? "#eff6ff" : "#f8fafc",
+                color: hoverUnits ? "#0070ba" : "#94a3b8",
+                border: `1px solid ${hoverUnits ? "#bfdbfe" : "#e2e8f0"}`,
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontWeight: "600",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: hoverUnits ? "#0070ba" : "#94a3b8", display: "inline-block" }} />
+                {hoverUnits ? "Live Crosshair Tracking" : "Hover / Drag to Scrub"}
+              </span>
             </div>
           </div>
 
@@ -868,13 +914,26 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
           </div>
         </div>
 
-        {/* SVG Chart — full-bleed, no card padding */}
+        {/* SVG Chart — full-bleed with altered interactive crosshair cursor */}
         <div style={{ width: "100%", position: "relative", background: "#fafcff" }}>
           <svg
             ref={svgRef}
             onClick={handleSvgClick}
+            onMouseMove={handleSvgMouseMove}
+            onMouseDown={handleSvgMouseDown}
+            onMouseUp={handleSvgMouseUp}
+            onMouseLeave={handleSvgMouseLeave}
+            onTouchStart={handleSvgMouseDown}
+            onTouchMove={handleSvgMouseMove}
+            onTouchEnd={handleSvgMouseUp}
             viewBox="0 0 800 220"
-            style={{ width: "100%", display: "block", cursor: "crosshair" }}
+            style={{
+              width: "100%",
+              display: "block",
+              cursor: isDragging ? "grabbing" : "crosshair",
+              userSelect: "none",
+              touchAction: "none",
+            }}
             preserveAspectRatio="none"
           >
             {/* Y-axis label track */}
@@ -944,26 +1003,42 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
               );
             })}
 
-            {/* Active scrubber vertical */}
+            {/* Altered Interactive Crosshair Cursor System */}
             {(() => {
-              const ax = 52 + ((units - 2) / 28) * 748;
+              const ax = 52 + ((displayUnits - 2) / 28) * 748;
               const ay = 20 + ((100 - fulfillmentProbability) / 42) * 165;
-              const tooltipX = Math.min(720, Math.max(120, ax));
+              const tooltipX = Math.min(680, Math.max(140, ax));
               return (
                 <g>
-                  {/* Vertical rule */}
-                  <line x1={ax} y1="20" x2={ax} y2="185" stroke="#2563eb" strokeWidth="1" strokeOpacity="0.4" />
-                  {/* Dot on curve */}
-                  <circle cx={ax} cy={ay} r="8" fill="#2563eb" fillOpacity="0.15" />
-                  <circle cx={ax} cy={ay} r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2.5" />
-                  {/* Bottom tick */}
-                  <line x1={ax} y1="185" x2={ax} y2="193" stroke="#2563eb" strokeWidth="2" />
-                  <text x={ax} y="206" fill="#2563eb" fontSize="11" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">{units}u</text>
-                  {/* Floating card tooltip */}
-                  <g transform={`translate(${tooltipX}, ${Math.max(50, ay - 44)})`}>
-                    <rect x="-72" y="-20" width="144" height="38" rx="8" fill="#003087" />
-                    <text x="0" y="-5" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
-                      {fulfillmentProbability}% confidence
+                  {/* Vertical hairline crosshair */}
+                  <line x1={ax} y1="20" x2={ax} y2="185" stroke="#0070ba" strokeWidth="1.5" strokeDasharray="3 3" />
+
+                  {/* Horizontal tracking hairline crosshair */}
+                  <line x1="52" y1={ay} x2={ax} y2={ay} stroke="#0070ba" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.5" />
+
+                  {/* Y-axis dynamic coordinate badge */}
+                  <rect x="4" y={ay - 10} width="44" height="20" rx="4" fill="#003087" />
+                  <text x="26" y={ay + 4} fill="#ffffff" fontSize="10" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
+                    {fulfillmentProbability}%
+                  </text>
+
+                  {/* X-axis dynamic coordinate badge */}
+                  <rect x={ax - 19} y="188" width="38" height="20" rx="4" fill="#003087" />
+                  <text x={ax} y="202" fill="#ffffff" fontSize="10.5" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
+                    {displayUnits}u
+                  </text>
+
+                  {/* Multi-ring Magnetic Reticle on Curve */}
+                  <circle cx={ax} cy={ay} r="14" fill="#0070ba" fillOpacity="0.14" />
+                  <circle cx={ax} cy={ay} r="8" fill="none" stroke="#0070ba" strokeWidth="1.5" strokeOpacity="0.6" />
+                  <circle cx={ax} cy={ay} r="5" fill="#0070ba" />
+                  <circle cx={ax} cy={ay} r="2" fill="#ffffff" />
+
+                  {/* Floating Tooltip Card */}
+                  <g transform={`translate(${tooltipX}, ${Math.max(48, ay - 44)})`}>
+                    <rect x="-80" y="-22" width="160" height="42" rx="8" fill="#003087" filter="drop-shadow(0 4px 12px rgba(0, 48, 135, 0.25))" />
+                    <text x="0" y="-6" fill="#ffffff" fontSize="12" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
+                      {displayUnits} Units · {fulfillmentProbability}% Confidence
                     </text>
                     <text x="0" y="12" fill="#93c5fd" fontSize="10" textAnchor="middle" fontFamily="sans-serif">
                       ${investedAmount.toLocaleString()} · save ${directSavings.toLocaleString()}
@@ -1007,6 +1082,8 @@ function CustomerProbabilityEngine({ onStartCheckout }) {
 
 function DemandAndSavingsGraph({ onStartCheckout }) {
   const [activeUnits, setActiveUnits] = useState(25);
+  const [hoverUnits, setHoverUnits] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [equipmentType, setEquipmentType] = useState("pump");
   const svgRef = useRef(null);
 
@@ -1029,9 +1106,10 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
   const current = catalog[equipmentType];
   const maxU = current.maxUnits;
 
-  const currentTierPrice = getTierPrice(current.tiers, activeUnits);
-  const currentRetailTotal = activeUnits * current.retail;
-  const currentCollectiveTotal = activeUnits * currentTierPrice;
+  const displayUnits = hoverUnits ?? activeUnits;
+  const currentTierPrice = getTierPrice(current.tiers, displayUnits);
+  const currentRetailTotal = displayUnits * current.retail;
+  const currentCollectiveTotal = displayUnits * currentTierPrice;
   const currentSavings = currentRetailTotal - currentCollectiveTotal;
 
   const maxY = current.retail * maxU;
@@ -1040,10 +1118,10 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
   const graphPoints = useMemo(() => {
     return Array.from({ length: maxU }, (_, i) => {
       const u = i + 1;
-      const x = 60 + (u / maxU) * 680;
-      const retailY = 180 - ((u * current.retail) / maxY) * 140;
+      const x = 58 + (u / maxU) * 742;
+      const retailY = 16 + (1 - (u * current.retail) / maxY) * 180;
       const collectivePrice = getTierPrice(current.tiers, u);
-      const collectiveY = 180 - ((u * collectivePrice) / maxY) * 140;
+      const collectiveY = 16 + (1 - (u * collectivePrice) / maxY) * 180;
       return { u, x, retailY, collectiveY, savings: u * (current.retail - collectivePrice) };
     });
   }, [current, maxU, maxY]);
@@ -1051,32 +1129,54 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
   // Tier boundary positions for annotation lines
   const tierBoundaries = current.tiers.slice(0, -1).map((t) => ({
     u: t.max,
-    x: 60 + (t.max / maxU) * 680,
+    x: 58 + (t.max / maxU) * 742,
   }));
 
-  const retailSpline = getSmoothSpline(graphPoints.map((p) => ({ x: p.x, y: p.retailY })));
-  const collectiveSpline = getSmoothSpline(graphPoints.map((p) => ({ x: p.x, y: p.collectiveY })));
-  const lastGP = graphPoints[graphPoints.length - 1];
-  const firstGP = graphPoints[0];
-  // Savings fill: collective forward + retail backward
-  const savingsArea = collectiveSpline
-    + ` L ${lastGP.x.toFixed(1)} ${lastGP.retailY.toFixed(1)}`
-    + " " + getSmoothSpline([...graphPoints].reverse().map((p) => ({ x: p.x, y: p.retailY })))
-    + " Z";
-
-  const currentX = 60 + (activeUnits / maxU) * 680;
-  const currentYRetail = 180 - (currentRetailTotal / maxY) * 140;
-  const currentYCollective = 180 - (currentCollectiveTotal / maxY) * 140;
-
-  function handleGraphClick(e) {
-    if (!svgRef.current) return;
+  function getUnitsFromGraphEvent(e) {
+    if (!svgRef.current) return null;
     const rect = svgRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+    const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+    const clickX = clientX - rect.left;
     const scale = 800 / rect.width;
     const svgX = clickX * scale;
-    const ratio = Math.max(0, Math.min(1, (svgX - 60) / 680));
-    const newU = Math.max(1, Math.round(ratio * maxU));
-    setActiveUnits(newU);
+    const ratio = Math.max(0, Math.min(1, (svgX - 58) / 742));
+    return Math.max(1, Math.min(maxU, Math.round(ratio * maxU)));
+  }
+
+  function handleGraphMouseMove(e) {
+    const u = getUnitsFromGraphEvent(e);
+    if (u !== null) {
+      setHoverUnits(u);
+      if (isDragging) {
+        setActiveUnits(u);
+      }
+    }
+  }
+
+  function handleGraphMouseDown(e) {
+    setIsDragging(true);
+    const u = getUnitsFromGraphEvent(e);
+    if (u !== null) {
+      setActiveUnits(u);
+      setHoverUnits(u);
+    }
+  }
+
+  function handleGraphMouseUp() {
+    setIsDragging(false);
+  }
+
+  function handleGraphMouseLeave() {
+    setIsDragging(false);
+    setHoverUnits(null);
+  }
+
+  function handleGraphClick(e) {
+    const u = getUnitsFromGraphEvent(e);
+    if (u !== null) {
+      setActiveUnits(u);
+      setHoverUnits(u);
+    }
   }
 
   return (
@@ -1131,6 +1231,21 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+                <span style={{
+                  fontSize: "10.5px",
+                  background: hoverUnits ? "#eff6ff" : "#f8fafc",
+                  color: hoverUnits ? "#2563eb" : "#94a3b8",
+                  border: `1px solid ${hoverUnits ? "#bfdbfe" : "#e2e8f0"}`,
+                  padding: "2px 8px",
+                  borderRadius: "12px",
+                  fontWeight: "600",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}>
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: hoverUnits ? "#2563eb" : "#94a3b8", display: "inline-block" }} />
+                  {hoverUnits ? "Live Crosshair Tracking" : "Hover / Drag to Scrub"}
+                </span>
                 {/* Legend */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "5px", fontSize: "11.5px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
@@ -1150,17 +1265,33 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
             </div>
           </div>
 
-          {/* SVG Chart — full bleed */}
+          {/* SVG Chart — full bleed with altered interactive crosshair cursor */}
           <div style={{ width: "100%", background: "#fafcff", position: "relative" }}>
             <svg
               ref={svgRef}
               onClick={handleGraphClick}
+              onMouseMove={handleGraphMouseMove}
+              onMouseDown={handleGraphMouseDown}
+              onMouseUp={handleGraphMouseUp}
+              onMouseLeave={handleGraphMouseLeave}
+              onTouchStart={handleGraphMouseDown}
+              onTouchMove={handleGraphMouseMove}
+              onTouchEnd={handleGraphMouseUp}
               viewBox="0 0 800 240"
-              style={{ width: "100%", display: "block", cursor: "crosshair" }}
+              style={{
+                width: "100%",
+                display: "block",
+                cursor: isDragging ? "grabbing" : "crosshair",
+                userSelect: "none",
+                touchAction: "none",
+              }}
               preserveAspectRatio="none"
             >
               {/* Gradient defs */}
               <defs>
+                <marker id="arrowUp" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                </marker>
                 <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity="0.22" />
                   <stop offset="100%" stopColor="#22c55e" stopOpacity="0.04" />
@@ -1216,10 +1347,10 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
                 }));
 
                 // Active crosshair values
-                const ax = 58 + (activeUnits / maxU) * 742;
+                const ax = 58 + (displayUnits / maxU) * 742;
                 const aRetailY = toY(currentRetailTotal);
                 const aCollY = toY(currentCollectiveTotal);
-                const tooltipX = Math.min(730, Math.max(140, ax));
+                const tooltipX = Math.min(680, Math.max(140, ax));
 
                 return (
                   <g>
@@ -1258,23 +1389,42 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
                       );
                     })}
 
-                    {/* Active crosshair */}
-                    <line x1={ax} y1="16" x2={ax} y2="196" stroke="#2563eb" strokeWidth="1" strokeOpacity="0.35" />
+                    {/* Altered Interactive Crosshair Cursor System */}
+                    <line x1={ax} y1="16" x2={ax} y2="196" stroke="#0070ba" strokeWidth="1.5" strokeDasharray="3 3" />
+
+                    {/* Horizontal tracking hairlines */}
+                    <line x1="58" y1={aCollY} x2={ax} y2={aCollY} stroke="#0070ba" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.5" />
+                    <line x1="58" y1={aRetailY} x2={ax} y2={aRetailY} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" strokeOpacity="0.4" />
+
+                    {/* Dynamic Y-Axis Coordinate Badge for Collective */}
+                    <rect x="3" y={aCollY - 10} width="52" height="20" rx="4" fill="#003087" />
+                    <text x="29" y={aCollY + 4} fill="#ffffff" fontSize="9.5" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
+                      ${currentCollectiveTotal >= 1000 ? (currentCollectiveTotal / 1000).toFixed(1) + "k" : currentCollectiveTotal}
+                    </text>
+
+                    {/* Dynamic X-Axis Coordinate Badge */}
+                    <rect x={ax - 19} y="199" width="38" height="20" rx="4" fill="#003087" />
+                    <text x={ax} y="213" fill="#ffffff" fontSize="10.5" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
+                      {displayUnits}u
+                    </text>
 
                     {/* Retail dot */}
-                    <circle cx={ax} cy={aRetailY} r="4.5" fill="#ffffff" stroke="#94a3b8" strokeWidth="2" />
-                    {/* Collective dot */}
-                    <circle cx={ax} cy={aCollY} r="8" fill="#2563eb" fillOpacity="0.15" />
-                    <circle cx={ax} cy={aCollY} r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2.5" />
+                    <circle cx={ax} cy={aRetailY} r="5" fill="#ffffff" stroke="#94a3b8" strokeWidth="2.5" />
 
-                    {/* Green savings arrow */}
-                    <line x1={ax + 12} y1={aCollY} x2={ax + 12} y2={aRetailY} stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowUp)" />
+                    {/* Multi-ring Collective Reticle Bead */}
+                    <circle cx={ax} cy={aCollY} r="14" fill="#2563eb" fillOpacity="0.14" />
+                    <circle cx={ax} cy={aCollY} r="8" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeOpacity="0.6" />
+                    <circle cx={ax} cy={aCollY} r="5" fill="#2563eb" />
+                    <circle cx={ax} cy={aCollY} r="2" fill="#ffffff" />
 
-                    {/* Floating tooltip */}
-                    <g transform={`translate(${tooltipX}, ${Math.max(60, aCollY - 50)})`}>
-                      <rect x="-120" y="-24" width="240" height="46" rx="10" fill="#003087" />
+                    {/* Vertical delta bar between retail and collective */}
+                    <line x1={ax} y1={aCollY + 7} x2={ax} y2={aRetailY - 6} stroke="#10b981" strokeWidth="2" strokeDasharray="2 2" />
+
+                    {/* Floating Tooltip Card */}
+                    <g transform={`translate(${tooltipX}, ${Math.max(48, aCollY - 44)})`}>
+                      <rect x="-120" y="-24" width="240" height="46" rx="8" fill="#003087" filter="drop-shadow(0 4px 12px rgba(0, 48, 135, 0.25))" />
                       <text x="0" y="-7" fill="#ffffff" fontSize="13" fontWeight="700" textAnchor="middle" fontFamily="sans-serif">
-                        {activeUnits} units · Save ${currentSavings.toLocaleString()}
+                        {displayUnits} units · Save ${currentSavings.toLocaleString()}
                       </text>
                       <text x="-80" y="13" fill="#93c5fd" fontSize="10" textAnchor="start" fontFamily="sans-serif">
                         Retail ${currentRetailTotal.toLocaleString()}
@@ -1293,12 +1443,16 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
           <div style={{ padding: "12px 24px 18px", borderTop: "1px solid #f1f5f9" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#94a3b8", marginBottom: "5px" }}>
               <span>1 unit</span>
-              <span style={{ color: "#2563eb", fontWeight: "600" }}>Volume: {activeUnits} units</span>
+              <span style={{ color: "#2563eb", fontWeight: "600" }}>Volume: {displayUnits} units</span>
               <span>{maxU} units</span>
             </div>
             <input
-              type="range" min="1" max={maxU} value={activeUnits}
-              onChange={(e) => setActiveUnits(parseInt(e.target.value))}
+              type="range" min="1" max={maxU} value={displayUnits}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setActiveUnits(val);
+                setHoverUnits(val);
+              }}
               style={{ width: "100%", accentColor: "#2563eb", cursor: "pointer" }}
             />
           </div>
@@ -1318,9 +1472,9 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
               Save ${current.retail - currentTierPrice}/unit vs retail
             </div>
             <div style={{ marginTop: "12px", width: "100%", height: "6px", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden" }}>
-              <div style={{ width: `${(activeUnits / maxU) * 100}%`, height: "100%", background: "#2563eb", borderRadius: "3px" }} />
+              <div style={{ width: `${(displayUnits / maxU) * 100}%`, height: "100%", background: "#2563eb", borderRadius: "3px", transition: "width 0.1s ease" }} />
             </div>
-            <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>{activeUnits} / {maxU} max</div>
+            <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>{displayUnits} / {maxU} max</div>
           </Card>
 
           {/* Tier Breakdown */}
@@ -1328,13 +1482,14 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
             <div style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a", marginBottom: "10px" }}>Pricing Tiers</div>
             {current.tiers.map((t, i) => {
               const prevMax = i === 0 ? 0 : current.tiers[i - 1].max;
-              const isActive = activeUnits > prevMax && activeUnits <= t.max;
+              const isActive = displayUnits > prevMax && displayUnits <= t.max;
               return (
                 <div key={i} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                   padding: "7px 10px", borderRadius: "6px", marginBottom: "5px",
                   background: isActive ? "#eff6ff" : "#f8fafc",
                   border: `1px solid ${isActive ? "#bfdbfe" : "#f1f5f9"}`,
+                  transition: "all 0.15s ease",
                 }}>
                   <div>
                     <div style={{ fontSize: "11px", fontWeight: "600", color: isActive ? "#1d4ed8" : "#64748b" }}>
@@ -1358,7 +1513,7 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
             onClick={() => onStartCheckout({
               id: 1,
               name: current.name,
-              qty: activeUnits,
+              qty: displayUnits,
               amount: currentCollectiveTotal,
               savings: currentSavings,
             })}
