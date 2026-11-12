@@ -76,12 +76,18 @@ const Icons = {
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
+  Gemini: () => (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z" />
+    </svg>
+  ),
 };
 
 const navItems = [
   { key: "command", label: "Overview", icon: Icons.Command },
   { key: "probability", label: "ROI & Probability Engine", icon: Icons.Probability, highlight: true },
   { key: "analytics", label: "Demand & Savings Graph", icon: Icons.Analytics, badge: "Interactive" },
+  { key: "gemini", label: "Gemini AI Copilot", icon: Icons.Gemini, badge: "AI Live" },
   { key: "services", label: "PayPal Services & Rails", icon: Icons.Services, badge: "5 Rails" },
   { key: "pools", label: "Active Demand Pools", icon: Icons.Pools },
   { key: "predictive", label: "Procurement Forecasting", icon: Icons.Predictive },
@@ -276,6 +282,9 @@ export default function Home() {
           <DemandAndSavingsGraph
             onStartCheckout={handleStartCheckout}
           />
+        )}
+        {active === "gemini" && (
+          <GeminiCopilotView onStartCheckout={handleStartCheckout} onNavigate={setActive} />
         )}
         {active === "services" && (
           <PayPalEnterpriseServicesHub onNavigate={setActive} />
@@ -2013,6 +2022,376 @@ function NegotiationRoom() {
           ))}
         </div>
       </Card>
+    </>
+  );
+}
+
+// --- View 8.5: Google Gemini AI Procurement Copilot ---
+
+function GeminiCopilotView({ onStartCheckout, onNavigate }) {
+  const [aiStatus, setAiStatus] = useState({ configured: false, model: "gemini-1.5-flash", provider: "Google Gemini AI" });
+  const [chatMessages, setChatMessages] = useState([
+    {
+      role: "assistant",
+      text: "Hello! I am your MINT Gemini AI Procurement Copilot. I analyze collective purchase volumes, evaluate supplier tier discount leverage, and ensure all transactions are protected under PayPal Orders v2 Bilateral Escrow.",
+    },
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // Scenario Simulator
+  const [simEquipment, setSimEquipment] = useState("pump");
+  const [simUnits, setSimUnits] = useState(15);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  const equipmentCatalog = {
+    pump: { name: "Industrial Centrifugal Pump 5HP", retail: 415, negotiated: 365, target: 50, committed: 38 },
+    motor: { name: "3-Phase Induction Motor 15kW", retail: 570, negotiated: 480, target: 30, committed: 20 },
+    flow: { name: "Electromagnetic Flowmeter DN80", retail: 475, negotiated: 390, target: 25, committed: 14 },
+    valve: { name: "High-Pressure Gate Valve PN25", retail: 260, negotiated: 210, target: 50, committed: 32 },
+  };
+
+  const currentItem = equipmentCatalog[simEquipment];
+  const simInvested = simUnits * currentItem.negotiated;
+  const simSavings = simUnits * (currentItem.retail - currentItem.negotiated);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/v1/ai/status`)
+      .then((res) => res.json())
+      .then((data) => setAiStatus(data))
+      .catch(() => setAiStatus({ configured: false, model: "gemini-1.5-flash", provider: "Google Gemini AI" }));
+  }, []);
+
+  async function handleSendMessage(customPrompt = null) {
+    const textToSend = customPrompt || inputMessage;
+    if (!textToSend.trim() || chatLoading) return;
+
+    const userMsg = { role: "user", text: textToSend };
+    setChatMessages((prev) => [...prev, userMsg]);
+    if (!customPrompt) setInputMessage("");
+    setChatLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/ai/copilot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: textToSend,
+          context: {
+            equipment: currentItem.name,
+            units: simUnits,
+            retail_price: currentItem.retail,
+            negotiated_price: currentItem.negotiated,
+            total_invested: simInvested,
+            savings: simSavings,
+          },
+        }),
+      });
+      const data = await res.json();
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: data.response || "No response received.", source: data.source },
+      ]);
+    } catch (err) {
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: "Could not reach backend AI service at " + API_BASE },
+      ]);
+    }
+    setChatLoading(false);
+  }
+
+  async function handleRunAnalysis() {
+    setAnalysisLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/ai/analyze-pool`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          equipment_type: currentItem.name,
+          units: simUnits,
+          retail_price: currentItem.retail,
+          negotiated_price: currentItem.negotiated,
+          pool_target: currentItem.target,
+          current_committed: currentItem.committed,
+        }),
+      });
+      const data = await res.json();
+      setAnalysisResult(data);
+    } catch (err) {
+      alert("Error contacting Gemini AI analysis endpoint.");
+    }
+    setAnalysisLoading(false);
+  }
+
+  const quickPrompts = [
+    "Analyze PayPal Escrow vs Bank Wire & Letter of Credit fees",
+    "Recommend optimal volume tier to maximize company margin",
+    "Generate negotiation counter-offer for 50 pump units",
+    "Assess bilateral escrow protection against supplier non-delivery",
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title="Google Gemini AI Procurement Copilot"
+        description="Real-time generative intelligence powered by Google Gemini to model tier discounts, optimize collective negotiations, and enforce PayPal Orders v2 bilateral escrow security."
+        badge={aiStatus.configured ? "Gemini Live Active" : "Gemini Engine Ready"}
+      />
+
+      {/* Status Bar */}
+      <Card style={{ marginBottom: "20px", padding: "14px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{
+              width: "10px", height: "10px", borderRadius: "50%",
+              background: aiStatus.configured ? "#10b981" : "#0070ba",
+              boxShadow: aiStatus.configured ? "0 0 8px rgba(16, 185, 129, 0.4)" : "none",
+            }} />
+            <div>
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a" }}>
+                {aiStatus.provider} ({aiStatus.model})
+              </span>
+              <span style={{ fontSize: "12px", color: "#64748b", marginLeft: "8px" }}>
+                {aiStatus.configured ? "• Connected with Render GEMINI_API_KEY" : "• Ready for API Key"}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "8px", fontSize: "11px" }}>
+            <span style={{ background: "#eff6ff", color: "#0070ba", padding: "3px 8px", borderRadius: "4px", fontWeight: "600" }}>
+              Bilateral Escrow Risk Engine
+            </span>
+            <span style={{ background: "#ecfdf5", color: "#059669", padding: "3px 8px", borderRadius: "4px", fontWeight: "600" }}>
+              Tier Arbitrage
+            </span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Main Grid: Left Scenario Analyzer, Right Live Copilot */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "20px", marginBottom: "24px" }}>
+        {/* Left: Scenario Simulator */}
+        <div>
+          <Card style={{ marginBottom: "16px" }}>
+            <div style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", marginBottom: "4px" }}>
+              1. Procurement Scenario Simulator
+            </div>
+            <div style={{ fontSize: "12.5px", color: "#64748b", marginBottom: "16px" }}>
+              Select equipment and units to generate an institutional executive briefing with Gemini AI.
+            </div>
+
+            {/* Equipment buttons */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
+              {Object.entries(equipmentCatalog).map(([key, item]) => (
+                <button
+                  key={key}
+                  onClick={() => { setSimEquipment(key); setAnalysisResult(null); }}
+                  style={{
+                    padding: "9px 12px",
+                    borderRadius: "6px",
+                    textAlign: "left",
+                    background: simEquipment === key ? "#eff6ff" : "#f8fafc",
+                    border: `1.5px solid ${simEquipment === key ? "#0070ba" : "#e2e8f0"}`,
+                    color: simEquipment === key ? "#003087" : "#475569",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ fontSize: "12px", fontWeight: "600" }}>{item.name}</div>
+                  <div style={{ fontSize: "11px", color: "#059669", marginTop: "2px", fontWeight: "600" }}>
+                    ${item.negotiated}/u (Retail: ${item.retail})
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Units Slider */}
+            <div style={{ marginBottom: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
+                <span style={{ fontSize: "12.5px", fontWeight: "600", color: "#0f172a" }}>Volume to Commit:</span>
+                <span style={{ fontSize: "16px", fontWeight: "700", color: "#0070ba" }}>{simUnits} units (${simInvested.toLocaleString()} USD)</span>
+              </div>
+              <input
+                type="range" min="2" max="40" value={simUnits}
+                onChange={(e) => { setSimUnits(parseInt(e.target.value)); setAnalysisResult(null); }}
+                style={{ width: "100%", accentColor: "#0070ba", cursor: "pointer" }}
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>
+                <span>2 units</span>
+                <span>Direct Savings: +${simSavings.toLocaleString()} USD</span>
+                <span>40 units</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleRunAnalysis}
+              disabled={analysisLoading}
+              style={{
+                width: "100%",
+                padding: "11px 16px",
+                background: "#003087",
+                color: "#ffffff",
+                borderRadius: "6px",
+                fontSize: "13.5px",
+                fontWeight: "700",
+                cursor: "pointer",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
+            >
+              <Icons.Gemini /> {analysisLoading ? "Querying Google Gemini AI..." : "Generate Gemini AI Executive Briefing"}
+            </button>
+          </Card>
+
+          {/* Analysis Result Card */}
+          {analysisResult && (
+            <Card style={{ background: "#f8fafc", border: "1.5px solid #bfdbfe" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <div style={{ fontSize: "13px", fontWeight: "700", color: "#003087", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Icons.Gemini /> Gemini AI Executive Assessment
+                </div>
+                <span style={{ fontSize: "10px", background: "#e0f2fe", color: "#0369a1", padding: "2px 6px", borderRadius: "4px", fontWeight: "600" }}>
+                  {analysisResult.source === "gemini-live" ? "Live Generated via Gemini" : "Deterministic Engine"}
+                </span>
+              </div>
+
+              <div style={{ fontSize: "12.5px", color: "#334155", lineHeight: "1.6", whiteSpace: "pre-wrap", marginBottom: "16px" }}>
+                {analysisResult.analysis}
+              </div>
+
+              {/* Action row */}
+              <button
+                onClick={() => onStartCheckout({
+                  id: 1,
+                  name: currentItem.name,
+                  qty: simUnits,
+                  amount: simInvested,
+                  savings: simSavings,
+                })}
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  background: "#ffc439",
+                  color: "#003087",
+                  borderRadius: "24px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  border: "none",
+                  boxShadow: "0 2px 6px rgba(0, 48, 135, 0.12)",
+                }}
+              >
+                <Icons.PayPal /> Authorize ${simInvested.toLocaleString()} via PayPal Escrow
+              </button>
+            </Card>
+          )}
+        </div>
+
+        {/* Right: Live Copilot Chat */}
+        <Card style={{ display: "flex", flexDirection: "column", height: "600px", padding: "0", overflow: "hidden" }}>
+          {/* Chat Header */}
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0", background: "#ffffff" }}>
+            <div style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Icons.Gemini /> Institutional Procurement Copilot
+            </div>
+            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+              Ask questions on volume negotiation, cash arbitrage, or PayPal bilateral escrow protection.
+            </div>
+          </div>
+
+          {/* Quick Prompts Bar */}
+          <div style={{ padding: "10px 16px", background: "#fafcff", borderBottom: "1px solid #f1f5f9", display: "flex", gap: "6px", overflowX: "auto" }}>
+            {quickPrompts.map((q, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendMessage(q)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "14px",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  fontSize: "11px",
+                  color: "#0070ba",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  fontWeight: "600",
+                }}
+              >
+                {q.length > 36 ? q.substring(0, 36) + "..." : q}
+              </button>
+            ))}
+          </div>
+
+          {/* Chat Messages */}
+          <div style={{ flex: 1, padding: "16px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+            {chatMessages.map((msg, i) => (
+              <div
+                key={i}
+                style={{
+                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "88%",
+                  padding: "10px 14px",
+                  borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                  background: msg.role === "user" ? "#003087" : "#f1f5f9",
+                  color: msg.role === "user" ? "#ffffff" : "#0f172a",
+                  fontSize: "12.5px",
+                  lineHeight: "1.5",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {msg.text}
+              </div>
+            ))}
+            {chatLoading && (
+              <div style={{ alignSelf: "flex-start", padding: "8px 14px", background: "#f1f5f9", borderRadius: "12px", fontSize: "12px", color: "#64748b" }}>
+                Gemini AI is analyzing procurement parameters...
+              </div>
+            )}
+          </div>
+
+          {/* Input Box */}
+          <div style={{ padding: "12px 16px", borderTop: "1px solid #e2e8f0", background: "#ffffff", display: "flex", gap: "8px" }}>
+            <input
+              type="text"
+              placeholder="Ask Gemini AI about procurement, negotiations, or PayPal escrow..."
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSendMessage(); }}
+              style={{
+                flex: 1,
+                padding: "9px 12px",
+                borderRadius: "6px",
+                border: "1px solid #cbd5e1",
+                fontSize: "12.5px",
+                outline: "none",
+              }}
+            />
+            <button
+              onClick={() => handleSendMessage()}
+              disabled={chatLoading}
+              style={{
+                padding: "9px 18px",
+                background: "#0070ba",
+                color: "#ffffff",
+                borderRadius: "6px",
+                fontSize: "12.5px",
+                fontWeight: "700",
+                cursor: "pointer",
+                border: "none",
+              }}
+            >
+              Ask
+            </button>
+          </div>
+        </Card>
+      </div>
     </>
   );
 }

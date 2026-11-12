@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers.demo import router as demo_router
 from app.routers.payments import router as payments_router
 from app.routers.auth import router as auth_router
+from app.routers.ai import router as ai_router
 
 app = FastAPI(
     title="MINT API",
@@ -32,12 +33,13 @@ app.add_middleware(
 app.include_router(demo_router)
 app.include_router(payments_router)
 app.include_router(auth_router)
+app.include_router(ai_router)
 
 @app.get("/")
 def root():
     return {
         "message": "MINT API is running",
-        "status": "foundation + payments + auth skeleton",
+        "status": "foundation + payments + auth + gemini ai",
         "endpoints": [
             "/api/v1/demo/command-centre",
             "/api/v1/demo/analytics",
@@ -53,6 +55,9 @@ def root():
             "/api/v1/payments/paypal/summary",
             "/api/v1/auth/login",
             "/api/v1/auth/me",
+            "/api/v1/ai/status",
+            "/api/v1/ai/copilot",
+            "/api/v1/ai/analyze-pool",
         ],
     }
 

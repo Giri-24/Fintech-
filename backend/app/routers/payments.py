@@ -31,11 +31,18 @@ router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
 _orders = {}
 _processed_events = set()
 
-PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
-PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
-PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox").lower()
-PAYPAL_WEBHOOK_ID = os.getenv("PAYPAL_WEBHOOK_ID", "")
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "").strip().strip('"').strip("'")
+PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "").strip().strip('"').strip("'")
+PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox").strip().lower()
+PAYPAL_WEBHOOK_ID = os.getenv("PAYPAL_WEBHOOK_ID", "").strip().strip('"').strip("'")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+
+def _get_paypal_env():
+    client_id = os.getenv("PAYPAL_CLIENT_ID", PAYPAL_CLIENT_ID).strip().strip('"').strip("'")
+    client_secret = os.getenv("PAYPAL_CLIENT_SECRET", PAYPAL_CLIENT_SECRET).strip().strip('"').strip("'")
+    mode = os.getenv("PAYPAL_MODE", PAYPAL_MODE).strip().lower()
+    base_url = "https://api-m.sandbox.paypal.com" if mode == "sandbox" else "https://api-m.paypal.com"
+    return client_id, client_secret, mode, base_url
 
 BASE_URL = (
     "https://api-m.sandbox.paypal.com"
@@ -60,7 +67,8 @@ class CaptureRequest(BaseModel):
 
 
 async def get_access_token() -> Optional[str]:
-    if not PAYPAL_CLIENT_ID or not PAYPAL_CLIENT_SECRET:
+    client_id, client_secret, mode, base_url = _get_paypal_env()
+    if not client_id or not client_secret:
         return None
     now = datetime.now(timezone.utc)
     if _token_cache["token"] and _token_cache["expires"] > now:
@@ -68,8 +76,8 @@ async def get_access_token() -> Optional[str]:
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            f"{BASE_URL}/v1/oauth2/token",
-            auth=(PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET),
+            f"{base_url}/v1/oauth2/token",
+            auth=(client_id, client_secret),
             data={"grant_type": "client_credentials"},
             headers={"Accept": "application/json"},
         )
@@ -142,9 +150,10 @@ async def create_paypal_order(req: CreateOrderRequest):
         }
     }
 
+    client_id, client_secret, mode, base_url = _get_paypal_env()
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            f"{BASE_URL}/v2/checkout/orders",
+            f"{base_url}/v2/checkout/orders",
             json=payload,
             headers={
                 "Authorization": f"Bearer {token}",
@@ -218,9 +227,10 @@ async def capture_paypal_order(req: CaptureRequest):
         raise HTTPException(status_code=500, detail="PayPal credentials not available")
 
     request_id = str(uuid.uuid4())
+    client_id, client_secret, mode, base_url = _get_paypal_env()
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            f"{BASE_URL}/v2/checkout/orders/{req.paypal_order_id}/capture",
+            f"{base_url}/v2/checkout/orders/{req.paypal_order_id}/capture",
             json={},
             headers={
                 "Authorization": f"Bearer {token}",
@@ -271,11 +281,12 @@ def get_paypal_summary():
     total_captured_amount = sum(o.get("amount", 0) for o in captured_orders)
     total_pending_amount = sum(o.get("amount", 0) for o in pending_orders)
 
+    client_id, client_secret, mode, base_url = _get_paypal_env()
     return {
         "gateway_status": "Active & Healthy",
-        "mode": PAYPAL_MODE,
-        "credentials_configured": bool(PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET),
-        "webhook_configured": bool(PAYPAL_WEBHOOK_ID),
+        "mode": mode,
+        "credentials_configured": bool(client_id and client_secret),
+        "webhook_configured": bool(os.getenv("PAYPAL_WEBHOOK_ID", PAYPAL_WEBHOOK_ID)),
         "total_transactions": total_orders,
         "captured_count": len(captured_orders),
         "pending_count": len(pending_orders),
@@ -293,10 +304,11 @@ async def get_order_status(paypal_order_id: str):
         raise HTTPException(status_code=404, detail="Order not found")
 
     token = await get_access_token()
+    client_id, client_secret, mode, base_url = _get_paypal_env()
     if token and order.get("mode") != "mock":
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{BASE_URL}/v2/checkout/orders/{paypal_order_id}",
+                f"{base_url}/v2/checkout/orders/{paypal_order_id}",
                 headers={"Authorization": f"Bearer {token}"},
                 timeout=15.0,
             )
