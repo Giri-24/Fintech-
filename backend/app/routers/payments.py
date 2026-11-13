@@ -223,9 +223,16 @@ async def create_paypal_order(req: CreateOrderRequest, request: Request):
     data = resp.json()
     paypal_order_id = data["id"]
     approval_url = next(
-        (link["href"] for link in data.get("links", []) if link.get("rel") == "approve"),
+        (
+            link["href"]
+            for link in data.get("links", [])
+            if link.get("rel") in ("approve", "payer-action")
+        ),
         None
     )
+    if not approval_url:
+        checkout_base = "https://www.sandbox.paypal.com" if mode == "sandbox" else "https://www.paypal.com"
+        approval_url = f"{checkout_base}/checkoutnow?token={paypal_order_id}"
 
     order = {
         "mint_order_id": mint_order_id,

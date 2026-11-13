@@ -2489,6 +2489,13 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
         }),
       });
       const data = await res.json();
+      if (data && data.paypal_order_id && !data.approval_url) {
+        if (data.mode === "mock") {
+          data.approval_url = `${origin}/payment/return?token=${data.paypal_order_id}&mode=mock`;
+        } else {
+          data.approval_url = `https://www.sandbox.paypal.com/checkoutnow?token=${data.paypal_order_id}`;
+        }
+      }
       if (data && data.approval_url) {
         // Defensive rewrite: if approval_url targets localhost but browser is on Vercel or custom domain, redirect to current origin
         if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
