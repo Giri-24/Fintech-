@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const getApiBase = () => {
+  if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes("localhost")) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+  }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return "https://fintech-backend-xdcq.onrender.com";
+  }
+  return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
+};
 
 // --- Clean Line Icons ---
 const Icons = {
@@ -46,7 +54,7 @@ const Icons = {
   Mesh: () => (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="12 2 2 7 12 12 22 7 12 2" />
-      <polyline points="2 17 12 22 22 17M2 12 12 17 22 12" />
+      <path d="m2 17 10 5 10-5M2 12l10 5 10-5" />
     </svg>
   ),
   Negotiation: () => (
@@ -104,7 +112,7 @@ export default function Home() {
   const [preselectedCheckout, setPreselectedCheckout] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/health`)
+    fetch(`${getApiBase()}/health`)
       .then((res) => {
         if (res.ok) setBackendOnline(true);
       })
@@ -122,7 +130,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", color: "#0f172a" }}>
+    <div style={{ display: "flex", width: "100%", minHeight: "100vh", background: "#f5f7fa", color: "#0f172a" }}>
       {/* Sidebar - Clean PayPal White Console */}
       <aside style={{
         width: "260px",
@@ -266,7 +274,7 @@ export default function Home() {
       </aside>
 
       {/* Main Workspace */}
-      <main style={{ flex: 1, padding: "32px 40px", overflowY: "auto", maxWidth: "1240px" }}>
+      <main style={{ flex: 1, minWidth: 0, width: "100%", padding: "32px 40px", overflowY: "auto", maxWidth: "1320px" }}>
         {active === "command" && (
           <CommandCentre
             onNavigate={setActive}
@@ -1220,7 +1228,7 @@ function DemandAndSavingsGraph({ onStartCheckout }) {
       </div>
 
       {/* ── Main Chart + Side Panel Layout ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "16px", marginBottom: "20px", alignItems: "stretch" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 280px", gap: "20px", marginBottom: "20px", alignItems: "stretch", width: "100%" }}>
 
         {/* LEFT: Hero Chart Card */}
         <Card style={{ padding: "0", overflow: "hidden" }}>
@@ -2057,7 +2065,7 @@ function GeminiCopilotView({ onStartCheckout, onNavigate }) {
   const simSavings = simUnits * (currentItem.retail - currentItem.negotiated);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/v1/ai/status`)
+    fetch(`${getApiBase()}/api/v1/ai/status`)
       .then((res) => res.json())
       .then((data) => setAiStatus(data))
       .catch(() => setAiStatus({ configured: false, model: "gemini-1.5-flash", provider: "Google Gemini AI" }));
@@ -2073,7 +2081,7 @@ function GeminiCopilotView({ onStartCheckout, onNavigate }) {
     setChatLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/v1/ai/copilot`, {
+      const res = await fetch(`${getApiBase()}/api/v1/ai/copilot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2096,7 +2104,7 @@ function GeminiCopilotView({ onStartCheckout, onNavigate }) {
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "assistant", text: "Could not reach backend AI service at " + API_BASE },
+        { role: "assistant", text: "Could not reach backend AI service at " + getApiBase() },
       ]);
     }
     setChatLoading(false);
@@ -2105,7 +2113,7 @@ function GeminiCopilotView({ onStartCheckout, onNavigate }) {
   async function handleRunAnalysis() {
     setAnalysisLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/ai/analyze-pool`, {
+      const res = await fetch(`${getApiBase()}/api/v1/ai/analyze-pool`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2170,7 +2178,7 @@ function GeminiCopilotView({ onStartCheckout, onNavigate }) {
       </Card>
 
       {/* Main Grid: Left Scenario Analyzer, Right Live Copilot */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "20px", marginBottom: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)", gap: "20px", marginBottom: "24px", width: "100%" }}>
         {/* Left: Scenario Simulator */}
         <div>
           <Card style={{ marginBottom: "16px" }}>
@@ -2440,7 +2448,7 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+      const res = await fetch(`${getApiBase()}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailToUse, password: "demo" }),
@@ -2455,7 +2463,7 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
         alert(data.detail || "Authentication error");
       }
     } catch (err) {
-      alert("Could not reach backend API at " + API_BASE);
+      alert("Could not reach backend API at " + getApiBase());
     }
     setLoading(false);
   }
@@ -2464,7 +2472,9 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
     setLoading(true);
     setOrderState(null);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/payments/paypal/create-order`, {
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://fintech-uaot.vercel.app";
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/api/v1/payments/paypal/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2474,9 +2484,22 @@ function Approvals({ token, setToken, orgName, setOrgName, onLogout, preselected
           currency: "USD",
           buyer_name: buyer.name,
           description: buyer.description || `MINT Collective Procurement - ${buyer.qty}x Centrifugal Pump 5HP`,
+          return_url: `${origin}/payment/return`,
+          cancel_url: `${origin}/payment/cancel`,
         }),
       });
       const data = await res.json();
+      if (data && data.approval_url) {
+        // Defensive rewrite: if approval_url targets localhost but browser is on Vercel or custom domain, redirect to current origin
+        if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+          try {
+            const parsed = new URL(data.approval_url);
+            if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+              data.approval_url = `${window.location.origin}${parsed.pathname}${parsed.search}`;
+            }
+          } catch (e) {}
+        }
+      }
       setOrderState(data);
     } catch (err) {
       setOrderState({ error: "Failed to connect to PayPal Orders v2 endpoint" });

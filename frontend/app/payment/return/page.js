@@ -4,43 +4,57 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+function getApiBase() {
+  if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes("localhost")) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+  }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return "https://fintech-backend-xdcq.onrender.com";
+  }
+  return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
+}
 
 function ReturnContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token =
+    searchParams.get("token") ||
+    searchParams.get("paypal_order_id") ||
+    searchParams.get("orderId") ||
+    searchParams.get("order_id");
 
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  async function captureOrder() {
     if (!token) {
       setLoading(false);
       setError("No payment token received in URL parameters.");
       return;
     }
-
-    async function captureOrder() {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/payments/paypal/capture`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paypal_order_id: token }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setResult(data);
-        } else {
-          setError(data.detail || "Capture failed");
-        }
-      } catch (err) {
-        setError("Could not communicate with MINT API to finalize capture.");
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    setError(null);
+    try {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/api/v1/payments/paypal/capture`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paypal_order_id: token }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult(data);
+      } else {
+        setError(data.detail || "Capture failed");
       }
+    } catch (err) {
+      setError("Could not communicate with MINT API to finalize capture.");
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
     captureOrder();
   }, [token]);
 
@@ -104,7 +118,24 @@ function ReturnContent() {
           color: "#b91c1c",
           marginBottom: "24px",
         }}>
-          {error}
+          <div style={{ fontWeight: "600", marginBottom: "6px" }}>Capture Status:</div>
+          <div>{error}</div>
+          <button
+            onClick={() => captureOrder()}
+            style={{
+              marginTop: "12px",
+              padding: "6px 14px",
+              background: "#b91c1c",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Retry Verification
+          </button>
         </div>
       )}
 
